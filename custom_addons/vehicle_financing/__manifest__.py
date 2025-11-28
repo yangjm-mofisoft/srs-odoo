@@ -7,7 +7,9 @@
     'depends': ['base', 'account', 'sale', 'purchase'],
     'data': [
         'security/ir.model.access.csv',
-        'views.xml',
+        'views/vehicle_views.xml',
+        'views/contract_views.xml',
+        'views/menu_views.xml',
     ],
     'installable': True,
     'application': True,

@@ -1,51 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Vehicle Asset Views -->
-    <record id="view_leasing_vehicle_list" model="ir.ui.view">
-        <field name="name">leasing.vehicle.list</field>
-        <field name="model">leasing.vehicle</field>
-        <field name="arch" type="xml">
-            <list string="Vehicles">
-                <field name="reg_no"/>
-                <field name="make"/>
-                <field name="model"/>
-                <field name="year"/>
-                <field name="status"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="view_leasing_vehicle_form" model="ir.ui.view">
-        <field name="name">leasing.vehicle.form</field>
-        <field name="model">leasing.vehicle</field>
-        <field name="arch" type="xml">
-            <form string="Vehicle">
-                <header>
-                    <field name="status" widget="statusbar"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1><field name="reg_no" placeholder="Registration No e.g. ABC-1234"/></h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="make"/>
-                            <field name="model"/>
-                            <field name="year"/>
-                            <field name="color"/>
-                        </group>
-                        <group>
-                            <field name="engine_no"/>
-                            <field name="chassis_no"/>
-                            <field name="fuel_type"/>
-                        </group>
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
     <!-- Financial Contract Views -->
     <record id="view_leasing_contract_list" model="ir.ui.view">
         <field name="name">leasing.contract.list</field>
@@ -70,7 +25,17 @@
         <field name="arch" type="xml">
             <form string="Financial Contract">
                 <header>
-                    <field name="ac_status" widget="statusbar" clickable="1"/>
+                    <!-- Workflow Buttons -->
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" 
+                            invisible="ac_status != 'draft'" groups="account.group_account_manager"/>
+                    
+                    <button name="action_close" string="Close Account" type="object" 
+                            invisible="ac_status != 'active'"/>
+                    
+                    <button name="action_draft" string="Reset to Draft" type="object" 
+                            invisible="ac_status == 'draft'"/>
+                    
+                    <field name="ac_status" widget="statusbar" statusbar_visible="draft,active,closed"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -204,31 +169,20 @@
         </field>
     </record>
 
-    <!-- ACTIONS: Defined BEFORE Menus -->
-    
+    <!-- ACTIONS: Contract -->
     <record id="action_leasing_contract" model="ir.actions.act_window">
         <field name="name">Contracts</field>
         <field name="res_model">leasing.contract</field>
         <field name="view_mode">list,form</field>
     </record>
 
-    <record id="action_leasing_vehicle" model="ir.actions.act_window">
-        <field name="name">Vehicles</field>
-        <field name="res_model">leasing.vehicle</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
+    <!-- ACTIONS: Vouchers (Payments) -->
     <record id="action_leasing_receipt_voucher" model="ir.actions.act_window">
         <field name="name">Receipt Vouchers</field>
         <field name="res_model">account.payment</field>
         <field name="view_mode">tree,kanban,form,graph</field>
         <field name="domain">[('payment_type', '=', 'inbound')]</field>
         <field name="context">{'default_payment_type': 'inbound', 'default_partner_type': 'customer'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Register a new Receipt Voucher
-            </p>
-        </field>
     </record>
 
     <record id="action_leasing_payment_voucher" model="ir.actions.act_window">
@@ -237,54 +191,6 @@
         <field name="view_mode">tree,kanban,form,graph</field>
         <field name="domain">[('payment_type', '=', 'outbound')]</field>
         <field name="context">{'default_payment_type': 'outbound', 'default_partner_type': 'supplier'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Register a new Payment Voucher
-            </p>
-        </field>
     </record>
-
-    <!-- App Menu Structure -->
-    <menuitem id="menu_leasing_root" name="Leasing System" sequence="10" web_icon="base,static/description/icon.png"/>
-    
-    <!-- 1. Operations -->
-    <menuitem id="menu_leasing_contracts" name="Contracts" parent="menu_leasing_root" action="action_leasing_contract" sequence="1"/>
-    <menuitem id="menu_leasing_vehicles" name="Vehicles" parent="menu_leasing_root" action="action_leasing_vehicle" sequence="2"/>
-
-    <!-- 2. Billing (Customer Side) -->
-    <menuitem id="menu_leasing_billing" name="Billing" parent="menu_leasing_root" sequence="10"/>
-    
-    <menuitem id="menu_leasing_invoices" name="Invoices" parent="menu_leasing_billing" 
-              action="account.action_move_out_invoice_type" sequence="1"/>
-              
-    <menuitem id="menu_leasing_receipt_vouchers" name="Receipt Vouchers" parent="menu_leasing_billing" 
-              action="action_leasing_receipt_voucher" sequence="2"/>
-
-    <!-- 3. Vendors (Dealer Side) -->
-    <menuitem id="menu_leasing_vendors" name="Vendors" parent="menu_leasing_root" sequence="20"/>
-    
-    <menuitem id="menu_leasing_vendor_bills" name="Bills" parent="menu_leasing_vendors" 
-              action="account.action_move_in_invoice_type" sequence="1"/>
-              
-    <menuitem id="menu_leasing_payment_vouchers" name="Payment Vouchers" parent="menu_leasing_vendors" 
-              action="action_leasing_payment_voucher" sequence="2"/>
-
-    <!-- 4. Accounting (General) -->
-    <menuitem id="menu_leasing_accounting" name="Accounting" parent="menu_leasing_root" sequence="30" groups="account.group_account_user"/>
-    
-    <menuitem id="menu_leasing_journal_entries" name="Journal Entries" parent="menu_leasing_accounting" 
-              action="account.action_move_journal_line" sequence="1"/>
-              
-    <menuitem id="menu_leasing_journal_items" name="Journal Items" parent="menu_leasing_accounting" 
-              action="account.action_account_moves_all" sequence="2"/>
-
-    <!-- 5. Configuration -->
-    <menuitem id="menu_leasing_config" name="Configuration" parent="menu_leasing_root" sequence="99"/>
-    
-    <menuitem id="menu_leasing_coa" name="Chart of Accounts" parent="menu_leasing_config" 
-              action="account.action_account_form" sequence="10" groups="account.group_account_manager"/>
-              
-    <menuitem id="menu_leasing_taxes" name="Taxes" parent="menu_leasing_config" 
-              action="account.action_tax_form" sequence="20" groups="account.group_account_manager"/>
 
 </odoo>

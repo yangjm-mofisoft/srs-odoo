@@ -1,58 +1,6 @@
 from odoo import models, fields, api
 from dateutil.relativedelta import relativedelta
 
-class VehicleAsset(models.Model):
-    _name = 'leasing.vehicle'
-    _description = 'Vehicle Asset'
-    _rec_name = 'reg_no'
-
-    make = fields.Char(string="Make", required=True)
-    model = fields.Char(string="Model", required=True)
-    reg_no = fields.Char(string="Registration No.", required=True, unique=True)
-    engine_no = fields.Char(string="Engine No.")
-    chassis_no = fields.Char(string="Chassis No.")
-    year = fields.Integer(string="Year of Manufacture")
-    color = fields.Char(string="Color")
-    fuel_type = fields.Selection([
-        ('petrol', 'Petrol'),
-        ('diesel', 'Diesel'),
-        ('electric', 'Electric'),
-        ('hybrid', 'Hybrid')
-    ], string="Fuel Type")
-    status = fields.Selection([
-        ('available', 'Available'),
-        ('leased', 'Leased'),
-        ('maintenance', 'Maintenance'),
-        ('sold', 'Sold')
-    ], string="Asset Status", default='available')
-
-    def name_get(self):
-        result = []
-        for record in self:
-            name = f"{record.reg_no} - {record.make} {record.model}"
-            result.append((record.id, name))
-        return result
-
-class LeasingDealer(models.Model):
-    _name = 'leasing.dealer'
-    _description = 'Dealer Information'
-
-    name = fields.Char(string="Dealer Name", required=True)
-    code = fields.Char(string="Dealer Code", required=True)
-    active = fields.Boolean(default=True)
-
-class LeasingCharge(models.Model):
-    _name = 'leasing.charge'
-    _description = 'Standard Charges and Fees'
-
-    name = fields.Char(string="Charge Name", required=True)
-    amount = fields.Float(string="Default Amount")
-    type = fields.Selection([
-        ('admin', 'Admin Fee'),
-        ('other', 'Other Cost'),
-        ('penalty', 'Penalty')
-    ], required=True)
-
 class LeasingContract(models.Model):
     _name = 'leasing.contract'
     _description = 'Financial Contract (HP & Leasing)'
@@ -69,7 +17,7 @@ class LeasingContract(models.Model):
     model = fields.Char(related='vehicle_id.model', string="Model", store=True)
 
     hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True)
-    ic_no = fields.Char(related='hirer_id.vat', string="ID / IC No.", readonly=False) # Assuming VAT field is used for ID
+    ic_no = fields.Char(related='hirer_id.vat', string="ID / IC No.", readonly=False)
     
     agreement_date = fields.Date(string="Agreement Date", default=fields.Date.context_today)
     agreement_no = fields.Char(string="Agreement No", required=True, copy=False, default='New')
@@ -141,11 +89,46 @@ class LeasingContract(models.Model):
     other_cost_id = fields.Many2one('leasing.charge', string="Other Cost Config", domain=[('type', '=', 'other')])
     other_cost = fields.Monetary(string="Other Cost")
 
+    # --- Tab C: Paid ---
+    no_inst_paid = fields.Integer(string="No. of Inst. Paid", default=0)
+    total_inst_paid = fields.Monetary(string="Total Installment Paid", default=0.0)
+    total_late_paid = fields.Monetary(string="Total Late Paid", default=0.0)
+    balance_installment = fields.Monetary(string="Balance Installment", compute='_compute_balances')
+    last_record_date = fields.Date(string="Last Record Date")
+
+    # --- Tab D: O/S ---
+    os_balance = fields.Monetary(string="O/S Balance", compute='_compute_balances')
+    balance_late_charges = fields.Monetary(string="Balance Late Charges")
+    balance_misc_fee = fields.Monetary(string="Balance Misc Fee")
+    total_payable = fields.Monetary(string="Total Payable", compute='_compute_balances')
+    next_inst_date = fields.Date(string="Next Inst. Date")
+
+    # --- Tab E: Giro ---
+    collection_bank_id = fields.Many2one('res.bank', string="Collection Bank ID")
+
+    # --- Tab F: Misc ---
+    first_due_date = fields.Date(string="First Due Date")
+    agreement_type = fields.Selection([('hp', 'Hire Purchase'), ('lease', 'Leasing')], string="Agreement Type")
+    reference_no = fields.Char(string="Reference No")
+    block_disc_no = fields.Char(string="Block Disc No.")
+    last_inst_date = fields.Date(string="Last Inst. Date")
+    
+    interest_derived = fields.Monetary(string="Interest Derived")
+    block_status = fields.Boolean(string="Block Status")
+    
+    search_fee = fields.Monetary(string="Search Fee")
+    reminder_fee = fields.Monetary(string="Reminder Fee")
+    schedule_4_fee = fields.Monetary(string="4th Schedule Fee")
+    schedule_5_fee = fields.Monetary(string="5th Schedule Fee")
+    warning_letter_fee = fields.Monetary(string="Warning Letter Fee")
+    final_letter_fee = fields.Monetary(string="Final Letter Fee")
+
+    # --- Logic Methods ---
+
     @api.depends('cash_price', 'down_payment', 'int_rate_pa', 'no_of_inst')
     def _compute_financials(self):
         for rec in self:
             rec.loan_amount = rec.cash_price - rec.down_payment
-            # Simple Flat Rate logic for example purposes
             interest = (rec.loan_amount * (rec.int_rate_pa / 100) * (rec.no_of_inst / 12)) if rec.no_of_inst else 0
             rec.term_charges = interest
             rec.balance_hire = rec.loan_amount + interest
@@ -160,50 +143,25 @@ class LeasingContract(models.Model):
         if self.other_cost_id:
             self.other_cost = self.other_cost_id.amount
 
-    # --- Tab C: Paid (Calculated Placeholder) ---
-    # In a real app, these would compute from a related 'payment.history' model
-    no_inst_paid = fields.Integer(string="No. of Inst. Paid", default=0)
-    total_inst_paid = fields.Monetary(string="Total Installment Paid", default=0.0)
-    total_late_paid = fields.Monetary(string="Total Late Paid", default=0.0)
-    balance_installment = fields.Monetary(string="Balance Installment", compute='_compute_balances')
-    last_record_date = fields.Date(string="Last Record Date")
-
-    # --- Tab D: O/S (Outstanding) ---
-    os_balance = fields.Monetary(string="O/S Balance", compute='_compute_balances')
-    balance_late_charges = fields.Monetary(string="Balance Late Charges")
-    balance_misc_fee = fields.Monetary(string="Balance Misc Fee")
-    total_payable = fields.Monetary(string="Total Payable", compute='_compute_balances')
-    next_inst_date = fields.Date(string="Next Inst. Date")
-
     @api.depends('balance_hire', 'total_inst_paid', 'balance_late_charges', 'balance_misc_fee')
     def _compute_balances(self):
         for rec in self:
             rec.balance_installment = rec.balance_hire - rec.total_inst_paid
-            rec.os_balance = rec.balance_installment # Simplified logic
+            rec.os_balance = rec.balance_installment 
             rec.total_payable = rec.os_balance + rec.balance_late_charges + rec.balance_misc_fee
 
-    # --- Tab E: Giro Application ---
-    collection_bank_id = fields.Many2one('res.bank', string="Collection Bank ID")
-
-    # --- Tab F: Misc ---
-    first_due_date = fields.Date(string="First Due Date")
-    agreement_type = fields.Selection([('hp', 'Hire Purchase'), ('lease', 'Leasing')], string="Agreement Type")
-    reference_no = fields.Char(string="Reference No")
-    block_disc_no = fields.Char(string="Block Disc No.")
-    last_inst_date = fields.Date(string="Last Inst. Date")
-    
-    interest_derived = fields.Monetary(string="Interest Derived")
-    block_status = fields.Boolean(string="Block Status")
-    
-    # Fees
-    search_fee = fields.Monetary(string="Search Fee")
-    reminder_fee = fields.Monetary(string="Reminder Fee")
-    schedule_4_fee = fields.Monetary(string="4th Schedule Fee")
-    schedule_5_fee = fields.Monetary(string="5th Schedule Fee")
-    warning_letter_fee = fields.Monetary(string="Warning Letter Fee")
-    final_letter_fee = fields.Monetary(string="Final Letter Fee")
-
     def action_pay_type(self):
-        """ Button Action for PAYTYPE """
-        # Logic to open payment wizard or change payment type
         return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    # --- Workflow Methods ---
+    def action_approve(self):
+        for rec in self:
+            rec.ac_status = 'active'
+
+    def action_close(self):
+        for rec in self:
+            rec.ac_status = 'closed'
+
+    def action_draft(self):
+        for rec in self:
+            rec.ac_status = 'draft'
