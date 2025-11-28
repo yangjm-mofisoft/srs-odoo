@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vehicle Asset Views -->
+    <record id="view_leasing_vehicle_list" model="ir.ui.view">
+        <field name="name">leasing.vehicle.list</field>
+        <field name="model">leasing.vehicle</field>
+        <field name="arch" type="xml">
+            <list string="Vehicles">
+                <field name="reg_no"/>
+                <field name="make"/>
+                <field name="model"/>
+                <field name="year"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_leasing_vehicle_form" model="ir.ui.view">
+        <field name="name">leasing.vehicle.form</field>
+        <field name="model">leasing.vehicle</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle">
+                <header>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="reg_no" placeholder="Registration No e.g. ABC-1234"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="make"/>
+                            <field name="model"/>
+                            <field name="year"/>
+                            <field name="color"/>
+                        </group>
+                        <group>
+                            <field name="engine_no"/>
+                            <field name="chassis_no"/>
+                            <field name="fuel_type"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Financial Contract Views -->
+    <record id="view_leasing_contract_list" model="ir.ui.view">
+        <field name="name">leasing.contract.list</field>
+        <field name="model">leasing.contract</field>
+        <field name="arch" type="xml">
+            <list string="Financial Contracts">
+                <field name="agreement_no"/>
+                <field name="agreement_date"/>
+                <field name="hirer_id"/>
+                <field name="vehicle_reg_no"/>
+                <field name="make"/>
+                <field name="model"/>
+                <field name="balance_hire"/>
+                <field name="ac_status" widget="badge" decoration-success="ac_status == 'active'" decoration-muted="ac_status == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_leasing_contract_form" model="ir.ui.view">
+        <field name="name">leasing.contract.form</field>
+        <field name="model">leasing.contract</field>
+        <field name="arch" type="xml">
+            <form string="Financial Contract">
+                <header>
+                    <field name="ac_status" widget="statusbar" clickable="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="agreement_no" placeholder="Agreement No"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="hirer_id"/>
+                            <field name="vehicle_id"/>
+                        </group>
+                        <group>
+                            <field name="agreement_date"/>
+                            <field name="entry_date"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Main">
+                            <group>
+                                <group string="Agreement Details">
+                                    <field name="hp_ac_no"/>
+                                    <field name="ic_no"/>
+                                    <field name="finance_company_id"/>
+                                    <field name="submit_date"/>
+                                    <field name="entry_staff_id"/>
+                                </group>
+                                <group string="Asset Info">
+                                    <field name="vehicle_reg_no"/>
+                                    <field name="make"/>
+                                    <field name="model"/>
+                                </group>
+                                <group string="Terms">
+                                    <field name="inst_day"/>
+                                    <field name="period_type"/>
+                                    <field name="installment_type"/>
+                                    <field name="late_status"/>
+                                    <field name="cal_period"/>
+                                </group>
+                                <group string="Payment Setup">
+                                    <field name="multi_purch"/>
+                                    <field name="mortgage"/>
+                                    <field name="advanced_payment"/>
+                                    <field name="bank_acct"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Finance Info">
+                            <group>
+                                <group string="Loan Calculation">
+                                    <field name="cash_price"/>
+                                    <field name="down_payment"/>
+                                    <field name="loan_amount" widget="monetary"/>
+                                    <field name="int_rate_pa"/>
+                                    <field name="no_of_inst"/>
+                                    <field name="term_charges"/>
+                                    <field name="balance_hire" class="oe_subtotal_footer_separator"/>
+                                </group>
+                                <group string="Installment Plan">
+                                    <field name="first_inst_amount"/>
+                                    <field name="monthly_inst"/>
+                                    <field name="last_inst_amount"/>
+                                </group>
+                                <group string="Dealer Info">
+                                    <field name="dealer_id"/>
+                                    <field name="dealer_code"/>
+                                    <field name="dealer_name"/>
+                                    <field name="commission"/>
+                                </group>
+                                <group string="Charges &amp; Fees">
+                                    <field name="admin_fee_id"/>
+                                    <field name="admin_fee"/>
+                                    <field name="other_cost_id"/>
+                                    <field name="other_cost"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Paid">
+                            <group>
+                                <field name="no_inst_paid"/>
+                                <field name="total_inst_paid"/>
+                                <field name="total_late_paid"/>
+                                <field name="balance_installment"/>
+                                <field name="last_record_date"/>
+                            </group>
+                        </page>
+
+                        <page string="O/S">
+                            <group>
+                                <field name="os_balance"/>
+                                <field name="balance_late_charges"/>
+                                <field name="balance_misc_fee"/>
+                                <field name="total_payable" decoration-bf="1"/>
+                                <field name="next_inst_date"/>
+                            </group>
+                        </page>
+
+                        <page string="Giro Application">
+                            <group>
+                                <field name="collection_bank_id"/>
+                            </group>
+                        </page>
+
+                        <page string="Misc">
+                            <group col="4">
+                                <field name="first_due_date"/>
+                                <field name="agreement_type"/>
+                                <field name="reference_no"/>
+                                <field name="block_disc_no"/>
+                                <field name="last_inst_date"/>
+                                <field name="interest_derived"/>
+                                <field name="block_status"/>
+                            </group>
+                            <group string="Fees Schedule">
+                                <field name="search_fee"/>
+                                <field name="reminder_fee"/>
+                                <field name="schedule_4_fee"/>
+                                <field name="schedule_5_fee"/>
+                                <field name="warning_letter_fee"/>
+                                <field name="final_letter_fee"/>
+                            </group>
+                            <div class="mt-3">
+                                <button name="action_pay_type" string="PAYTYPE" type="object" class="btn-primary"/>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTIONS: Defined BEFORE Menus -->
+    
+    <record id="action_leasing_contract" model="ir.actions.act_window">
+        <field name="name">Contracts</field>
+        <field name="res_model">leasing.contract</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_leasing_vehicle" model="ir.actions.act_window">
+        <field name="name">Vehicles</field>
+        <field name="res_model">leasing.vehicle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_leasing_receipt_voucher" model="ir.actions.act_window">
+        <field name="name">Receipt Vouchers</field>
+        <field name="res_model">account.payment</field>
+        <field name="view_mode">tree,kanban,form,graph</field>
+        <field name="domain">[('payment_type', '=', 'inbound')]</field>
+        <field name="context">{'default_payment_type': 'inbound', 'default_partner_type': 'customer'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a new Receipt Voucher
+            </p>
+        </field>
+    </record>
+
+    <record id="action_leasing_payment_voucher" model="ir.actions.act_window">
+        <field name="name">Payment Vouchers</field>
+        <field name="res_model">account.payment</field>
+        <field name="view_mode">tree,kanban,form,graph</field>
+        <field name="domain">[('payment_type', '=', 'outbound')]</field>
+        <field name="context">{'default_payment_type': 'outbound', 'default_partner_type': 'supplier'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a new Payment Voucher
+            </p>
+        </field>
+    </record>
+
+    <!-- App Menu Structure -->
+    <menuitem id="menu_leasing_root" name="Leasing System" sequence="10" web_icon="base,static/description/icon.png"/>
+    
+    <!-- 1. Operations -->
+    <menuitem id="menu_leasing_contracts" name="Contracts" parent="menu_leasing_root" action="action_leasing_contract" sequence="1"/>
+    <menuitem id="menu_leasing_vehicles" name="Vehicles" parent="menu_leasing_root" action="action_leasing_vehicle" sequence="2"/>
+
+    <!-- 2. Billing (Customer Side) -->
+    <menuitem id="menu_leasing_billing" name="Billing" parent="menu_leasing_root" sequence="10"/>
+    
+    <menuitem id="menu_leasing_invoices" name="Invoices" parent="menu_leasing_billing" 
+              action="account.action_move_out_invoice_type" sequence="1"/>
+              
+    <menuitem id="menu_leasing_receipt_vouchers" name="Receipt Vouchers" parent="menu_leasing_billing" 
+              action="action_leasing_receipt_voucher" sequence="2"/>
+
+    <!-- 3. Vendors (Dealer Side) -->
+    <menuitem id="menu_leasing_vendors" name="Vendors" parent="menu_leasing_root" sequence="20"/>
+    
+    <menuitem id="menu_leasing_vendor_bills" name="Bills" parent="menu_leasing_vendors" 
+              action="account.action_move_in_invoice_type" sequence="1"/>
+              
+    <menuitem id="menu_leasing_payment_vouchers" name="Payment Vouchers" parent="menu_leasing_vendors" 
+              action="action_leasing_payment_voucher" sequence="2"/>
+
+    <!-- 4. Accounting (General) -->
+    <menuitem id="menu_leasing_accounting" name="Accounting" parent="menu_leasing_root" sequence="30" groups="account.group_account_user"/>
+    
+    <menuitem id="menu_leasing_journal_entries" name="Journal Entries" parent="menu_leasing_accounting" 
+              action="account.action_move_journal_line" sequence="1"/>
+              
+    <menuitem id="menu_leasing_journal_items" name="Journal Items" parent="menu_leasing_accounting" 
+              action="account.action_account_moves_all" sequence="2"/>
+
+    <!-- 5. Configuration -->
+    <menuitem id="menu_leasing_config" name="Configuration" parent="menu_leasing_root" sequence="99"/>
+    
+    <menuitem id="menu_leasing_coa" name="Chart of Accounts" parent="menu_leasing_config" 
+              action="account.action_account_form" sequence="10" groups="account.group_account_manager"/>
+              
+    <menuitem id="menu_leasing_taxes" name="Taxes" parent="menu_leasing_config" 
+              action="account.action_tax_form" sequence="20" groups="account.group_account_manager"/>
+
+</odoo>

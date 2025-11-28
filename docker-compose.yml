@@ -1,0 +1,37 @@
+services:
+  # 1. The Odoo Application Container
+  web:
+    build: .             #Builds from the Dockerfile in current directory
+    depends_on:
+      - db  # Tells Odoo to wait for the database to start
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./custom_addons:/mnt/extra-addons
+    environment:
+      - HOST=db           # Connects to the 'db' service below
+      - USER=odoo         # Database username
+      - PASSWORD=odoo     # Database password
+    restart: always
+
+  # 2. The Database Container (PostgreSQL)
+  db:
+    image: postgres:16    # Odoo 19 works best with Postgres 14+
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo  # Must match the PASSWORD above
+      - POSTGRES_USER=odoo      # Must match the USER above
+    ports:
+      - "5435:5432"       # Exposes DB port to localhost for tools like pgAdmin/DBeaver
+    volumes:
+      # This volume persists your data. 
+      # Even if you delete the container, your leasing data stays here.
+      - odoo-db-data:/var/lib/postgresql/data
+    restart: always
+
+# 3. Persistent Storage Definitions
+volumes:
+  odoo-web-data:  # Stores Odoo filestore (attachments, images)
+  odoo-db-data:   # Stores the actual Database tables
