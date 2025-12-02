@@ -1,5 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_leasing_vehicle,leasing.vehicle,model_leasing_vehicle,base.group_user,1,1,1,1
 access_leasing_contract,leasing.contract,model_leasing_contract,base.group_user,1,1,1,1
+access_leasing_contract_line,leasing.contract.line,model_leasing_contract_line,base.group_user,1,1,1,1
 access_leasing_dealer,leasing.dealer,model_leasing_dealer,base.group_user,1,1,1,1
 access_leasing_charge,leasing.charge,model_leasing_charge,base.group_user,1,1,1,1

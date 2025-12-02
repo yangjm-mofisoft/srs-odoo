@@ -29,6 +29,12 @@
                     <button name="action_approve" string="Approve" type="object" class="oe_highlight" 
                             invisible="ac_status != 'draft'" groups="account.group_account_manager"/>
                     
+                    <button name="action_generate_schedule" string="Compute Schedule" type="object" 
+                        invisible="ac_status != 'draft'" class="btn-secondary"/>
+
+                    <button name="action_create_invoices" string="Post Due Invoices" type="object" 
+                        invisible="ac_status != 'active'" class="btn-primary"/>
+
                     <button name="action_close" string="Close Account" type="object" 
                             invisible="ac_status != 'active'"/>
                     
@@ -114,6 +120,20 @@
                             </group>
                         </page>
 
+                        <page string="Repayment Schedule" name="schedule">
+                            <field name="line_ids" readonly="ac_status != 'draft'">
+                                <tree editable="bottom" decoration-muted="state == 'posted'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="date_due"/>
+                                    <field name="amount_principal" sum="Total Principal"/>
+                                    <field name="amount_interest" sum="Total Interest"/>
+                                    <field name="amount_total" sum="Total Amount"/>
+                                    <field name="invoice_id" widget="many2onebutton" optional="show"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'posted'" optional="show"/>
+                                </tree>
+                            </field>
+                        </page>
+
                         <page string="Paid">
                             <group>
                                 <field name="no_inst_paid"/>
@@ -164,7 +184,11 @@
                         </page>
                     </notebook>
                 </sheet>
-                <chatter/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>

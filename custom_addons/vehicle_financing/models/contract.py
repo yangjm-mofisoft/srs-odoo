@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 from dateutil.relativedelta import relativedelta
+from odoo.exceptions import UserError
 
 class LeasingContract(models.Model):
     _name = 'leasing.contract'
@@ -122,9 +123,83 @@ class LeasingContract(models.Model):
     schedule_5_fee = fields.Monetary(string="5th Schedule Fee")
     warning_letter_fee = fields.Monetary(string="Warning Letter Fee")
     final_letter_fee = fields.Monetary(string="Final Letter Fee")
+    
+    journal_id = fields.Many2one('account.journal', string="Accounting Journal", domain=[('type','=','sale')], required=True)
 
+    # Contract Lines
+    line_ids = fields.One2many('leasing.contract.line', 'contract_id', string="Installments")
+    
     # --- Logic Methods ---
+    @api.model
+    def create(self, vals):
+        # Auto-generate Agreement No if it is 'New'
+        if vals.get('agreement_no', 'New') == 'New':
+            vals['agreement_no'] = self.env['ir.sequence'].next_by_code('leasing.contract') or 'New'
+        return super(LeasingContract, self).create(vals)
+    
+    # --- Generate Schedule ---
+    def action_generate_schedule(self):
+        """ Generates the Installment Lines based on Tab B info """
+        self.ensure_one()
+        self.line_ids.unlink() # Clear old lines
+        
+        if not self.no_of_inst or not self.monthly_inst:
+            raise UserError("Please set Number of Installments and Monthly Installment amount.")
 
+        start_date = self.first_due_date or fields.Date.today()
+        lines = []
+        
+        # Simple Logic: Principal = Loan / Months. Interest = Rest.
+        monthly_principal_base = self.loan_amount / self.no_of_inst
+
+        for i in range(1, self.no_of_inst + 1):
+            date_due = start_date + relativedelta(months=i-1)
+            
+            # Math logic
+            principal = monthly_principal_base
+            interest = self.monthly_inst - principal
+            
+            # Adjustment for final month to match exactly
+            if i == self.no_of_inst:
+                principal = self.loan_amount - sum(l[2]['amount_principal'] for l in lines)
+                interest = self.monthly_inst - principal
+
+            lines.append((0, 0, {
+                'sequence': i,
+                'date_due': date_due,
+                'amount_principal': principal,
+                'amount_interest': interest,
+                'amount_total': self.monthly_inst,
+            }))
+            
+        self.write({'line_ids': lines})
+
+    # --- Create Invoices ---
+    def action_create_invoices(self):
+        for rec in self:
+            # Find lines due today or past, that are not invoiced
+            due_lines = rec.line_ids.filtered(lambda l: not l.invoice_id and l.date_due <= fields.Date.today())
+            
+            for line in due_lines:
+                # Create Invoice Line
+                inv_lines = [(0, 0, {
+                    'name': f"Installment #{line.sequence} - {rec.agreement_no}",
+                    'quantity': 1,
+                    'price_unit': line.amount_total,
+                    # Note: Ideally you map Principal/Interest to different accounts here
+                })]
+                
+                # Create Account Move
+                invoice = self.env['account.move'].create({
+                    'move_type': 'out_invoice',
+                    'partner_id': rec.hirer_id.id,
+                    'invoice_date': line.date_due,
+                    'journal_id': rec.journal_id.id,
+                    'invoice_line_ids': inv_lines,
+                })
+                
+                line.invoice_id = invoice.id
+    
     @api.depends('cash_price', 'down_payment', 'int_rate_pa', 'no_of_inst')
     def _compute_financials(self):
         for rec in self:
