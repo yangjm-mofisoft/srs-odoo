@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="report_leasing_agreement">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="o">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <div class="text-center mb-4">
+                        <h2>HIRE PURCHASE AGREEMENT</h2>
+                        <h4>Agreement No: <span t-field="o.agreement_no"/></h4>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <strong>HIRER DETAILS:</strong><br/>
+                            <span t-field="o.hirer_id.name"/><br/>
+                            <span t-field="o.hirer_id.street"/> <span t-field="o.hirer_id.street2"/><br/>
+                            <span t-field="o.hirer_id.city"/> <span t-field="o.hirer_id.zip"/><br/>
+                            ID/IC No: <span t-field="o.ic_no"/>
+                        </div>
+                        <div class="col-6 text-end">
+                            <strong>Date of Agreement:</strong> <span t-field="o.agreement_date"/><br/>
+                            <strong>Status:</strong> <span t-field="o.ac_status"/>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th colspan="4" class="text-center">VEHICLE SCHEDULE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Make / Model</strong></td>
+                                        <td><span t-field="o.make"/> <span t-field="o.model"/></td>
+                                        <td><strong>Reg No.</strong></td>
+                                        <td><span t-field="o.vehicle_reg_no"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Chassis No.</strong></td>
+                                        <td><span t-field="o.vehicle_id.chassis_no"/></td>
+                                        <td><strong>Engine No.</strong></td>
+                                        <td><span t-field="o.vehicle_id.engine_no"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2" class="table-light">FINANCIAL TERMS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Cash Price</td>
+                                        <td class="text-end"><span t-field="o.cash_price" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Less: Down Payment / Trade-In</td>
+                                        <td class="text-end">- <span t-field="o.down_payment" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    </tr>
+                                    <tr class="fw-bold">
+                                        <td>Loan Amount (Principal)</td>
+                                        <td class="text-end border-top"><span t-field="o.loan_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Add: Term Charges (Interest @ <span t-field="o.int_rate_pa"/>%)</td>
+                                        <td class="text-end"><span t-field="o.term_charges" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    </tr>
+                                    <tr class="fw-bold bg-light">
+                                        <td>Balance Payable (Hire Purchase Price)</td>
+                                        <td class="text-end"><span t-field="o.balance_hire" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>REPAYMENT SCHEDULE</h5>
+                        <p>The Hirer agrees to pay the Owner the Balance Payable in <strong><span t-field="o.no_of_inst"/></strong> monthly installments.</p>
+                        
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Due Date</th>
+                                    <th class="text-end">Principal</th>
+                                    <th class="text-end">Interest</th>
+                                    <th class="text-end">Installment Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.line_ids" t-as="line">
+                                    <td><span t-field="line.sequence"/></td>
+                                    <td><span t-field="line.date_due"/></td>
+                                    <td class="text-end"><span t-field="line.amount_principal" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td class="text-end"><span t-field="line.amount_interest" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td class="text-end fw-bold"><span t-field="line.amount_total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-5" style="page-break-inside: avoid;">
+                        <div class="col-6">
+                            <div style="border-top: 1px solid black; width: 80%; padding-top: 10px;">
+                                <strong>Signed by (Hirer)</strong><br/>
+                                <span t-field="o.hirer_id.name"/>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <div style="border-top: 1px solid black; width: 80%; float: right; padding-top: 10px;">
+                                <strong>For and on behalf of Company</strong><br/>
+                                (Authorized Signatory)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 text-muted" style="font-size: 0.8em;">
+                        <p>This document is computer generated and is valid without a seal.</p>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+</odoo>

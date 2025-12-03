@@ -15,6 +15,8 @@
         'wizard/settlement_views.xml',
         'views/account_payment_views.xml',
         'views/menu_views.xml',
+        'reports/leasing_reports.xml',
+        'reports/leasing_contract_template.xml',
     ],
     'installable': True,
     'application': True,
