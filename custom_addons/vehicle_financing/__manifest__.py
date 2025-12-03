@@ -8,6 +8,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/sequence.xml',
+        'data/cron.xml',
         'views/vehicle_views.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
