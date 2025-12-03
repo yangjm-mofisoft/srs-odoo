@@ -8,11 +8,12 @@
         <field name="arch" type="xml">
             <list string="Financial Contracts">
                 <field name="agreement_no"/>
+                <field name="product_id"/>
+                <!-- Uses product_type correctly -->
+                <field name="product_type" optional="show"/>
                 <field name="agreement_date"/>
                 <field name="hirer_id"/>
                 <field name="vehicle_reg_no"/>
-                <field name="make"/>
-                <field name="model"/>
                 <field name="balance_hire"/>
                 <field name="ac_status" widget="badge" decoration-success="ac_status == 'active'" decoration-muted="ac_status == 'closed'"/>
             </list>
@@ -47,11 +48,9 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <!-- Invoice Smart Button -->
                         <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-pencil-square-o">
                             <field name="invoice_count" widget="statinfo" string="Invoices"/>
                         </button>
-                        <!-- Payment Smart Button -->
                         <button name="action_view_payments" type="object" class="oe_stat_button" icon="fa-money">
                             <field name="payment_count" widget="statinfo" string="Vouchers"/>
                         </button>
@@ -75,6 +74,9 @@
                         <page string="Main">
                             <group>
                                 <group string="Agreement Details">
+                                    <field name="product_id" options="{'no_create': True}"/>
+                                    <!-- Using product_type here instead -->
+                                    <field name="product_type" readonly="1"/>
                                     <field name="hp_ac_no"/>
                                     <field name="ic_no"/>
                                     <field name="finance_company_id"/>
@@ -113,6 +115,12 @@
                                     <field name="term_charges"/>
                                     <field name="balance_hire" class="oe_subtotal_footer_separator"/>
                                 </group>
+                                <group string="Leasing Parameters" invisible="product_type != 'lease'">
+                                    <field name="residual_value_percent"/>
+                                    <field name="residual_value"/>
+                                    <field name="mileage_limit"/>
+                                    <field name="excess_mileage_rate"/>
+                                </group>
                                 <group string="Installment Plan">
                                     <field name="first_inst_amount"/>
                                     <field name="monthly_inst"/>
@@ -126,7 +134,6 @@
                                     <field name="commission"/>
                                 </group>
                                 <group string="Accounting Setup" class="mt-4">
-                                    <!-- NEW: These define where the money goes -->
                                     <field name="journal_id"/>
                                     <field name="asset_account_id"/>
                                     <field name="income_account_id"/>
@@ -177,7 +184,7 @@
                         <page string="Misc">
                             <group col="4">
                                 <field name="first_due_date"/>
-                                <field name="agreement_type"/>
+                                <!-- FIXED: Removed broken 'agreement_type' field -->
                                 <field name="reference_no"/>
                                 <field name="block_disc_no"/>
                                 <field name="last_inst_date"/>
@@ -192,7 +199,6 @@
                                 <field name="warning_letter_fee"/>
                                 <field name="final_letter_fee"/>
                             </group>
-                            <!-- Removed the obsolete 'PAYTYPE' button which caused the error -->
                         </page>
                     </notebook>
                 </sheet>

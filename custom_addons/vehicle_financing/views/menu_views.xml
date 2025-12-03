@@ -40,6 +40,10 @@
     <!-- 5. Configuration -->
     <menuitem id="menu_leasing_config" name="Configuration" parent="menu_leasing_root" sequence="99"/>
     
+    <!-- NEW: Financial Products Management -->
+    <menuitem id="menu_leasing_products" name="Financial Products" 
+              parent="menu_leasing_config" action="action_leasing_product" sequence="5"/>
+    
     <menuitem id="menu_leasing_coa" name="Chart of Accounts" parent="menu_leasing_config" 
               action="account.action_account_form" sequence="10" groups="account.group_account_manager"/>
               

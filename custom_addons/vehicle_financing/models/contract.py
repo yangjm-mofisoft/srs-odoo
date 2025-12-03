@@ -1,6 +1,6 @@
 from odoo import models, fields, api, _
 from dateutil.relativedelta import relativedelta
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 class LeasingContract(models.Model):
     _name = 'leasing.contract'
@@ -8,10 +8,16 @@ class LeasingContract(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'agreement_no'
 
-    # --- Tab A: Main ---
+    # --- Header Info ---
     hp_ac_no = fields.Char(string="HP A/C No.")
-    vehicle_id = fields.Many2one('leasing.vehicle', string="Vehicle Asset", required=True)
     
+    product_id = fields.Many2one('leasing.product', string="Financial Product", 
+        domain="[('active', '=', True)]", required=True)
+
+    # Helper to control UI visibility (hides/shows Leasing fields)
+    product_type = fields.Selection(related='product_id.product_type', string="Product Type", store=True)
+
+    vehicle_id = fields.Many2one('leasing.vehicle', string="Vehicle Asset", required=True)
     vehicle_reg_no = fields.Char(related='vehicle_id.reg_no', string="Vehicle Reg No.", store=True)
     make = fields.Char(related='vehicle_id.make', string="Make", store=True)
     model = fields.Char(related='vehicle_id.model', string="Model", store=True)
@@ -23,10 +29,8 @@ class LeasingContract(models.Model):
     agreement_no = fields.Char(string="Agreement No", required=True, copy=False, default='New')
     
     finance_company_id = fields.Many2one('res.partner', string="Finance Name")
-    
     submit_date = fields.Date(string="Submit Date")
     entry_date = fields.Date(string="Entry Date", default=fields.Date.context_today)
-    
     inst_day = fields.Integer(string="Inst. Day (1-31)")
     multi_purch = fields.Boolean(string="Multi Purch")
     mortgage = fields.Boolean(string="Mortgage")
@@ -60,7 +64,7 @@ class LeasingContract(models.Model):
 
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
-    # --- Tab B: Finance Info ---
+    # --- Financials ---
     cash_price = fields.Monetary(string="Cash Price")
     down_payment = fields.Monetary(string="Down Payment")
     
@@ -75,6 +79,13 @@ class LeasingContract(models.Model):
     monthly_inst = fields.Monetary(string="Monthly Inst.")
     last_inst_amount = fields.Monetary(string="Last Inst.")
     
+    # --- Leasing Specifics (Hidden for HP) ---
+    residual_value_percent = fields.Float(string="Residual Value (%)")
+    residual_value = fields.Monetary(string="Residual Value (RV)")
+    
+    mileage_limit = fields.Integer(string="Annual Mileage Limit (km)")
+    excess_mileage_rate = fields.Monetary(string="Excess Mileage Rate")
+
     dealer_id = fields.Many2one('leasing.dealer', string="Dealer")
     dealer_partner_id = fields.Many2one('res.partner', string="Dealer Partner Record")
     dealer_code = fields.Char(related='dealer_id.code', string="Dealer Code")
@@ -86,26 +97,23 @@ class LeasingContract(models.Model):
     other_cost_id = fields.Many2one('leasing.charge', string="Other Cost Config", domain=[('type', '=', 'other')])
     other_cost = fields.Monetary(string="Other Cost")
 
-    # --- Tab C: Paid ---
+    # --- Tracking ---
     no_inst_paid = fields.Integer(string="No. of Inst. Paid", compute='_compute_payment_status', store=True)
     total_inst_paid = fields.Monetary(string="Total Installment Paid", compute='_compute_payment_status', store=True)
     total_late_paid = fields.Monetary(string="Total Late Paid", default=0.0)
     balance_installment = fields.Monetary(string="Balance Installment", compute='_compute_balances')
     last_record_date = fields.Date(string="Last Record Date")
 
-    # --- Tab D: O/S ---
     os_balance = fields.Monetary(string="O/S Balance", compute='_compute_balances')
     balance_late_charges = fields.Monetary(string="Balance Late Charges")
     balance_misc_fee = fields.Monetary(string="Balance Misc Fee")
     total_payable = fields.Monetary(string="Total Payable", compute='_compute_balances')
     next_inst_date = fields.Date(string="Next Inst. Date")
 
-    # --- Tab E: Giro ---
     collection_bank_id = fields.Many2one('res.bank', string="Collection Bank ID")
 
-    # --- Tab F: Misc ---
+    # --- Misc ---
     first_due_date = fields.Date(string="First Due Date")
-    agreement_type = fields.Selection([('hp', 'Hire Purchase'), ('lease', 'Leasing')], string="Agreement Type")
     reference_no = fields.Char(string="Reference No")
     block_disc_no = fields.Char(string="Block Disc No.")
     last_inst_date = fields.Date(string="Last Inst. Date")
@@ -120,21 +128,46 @@ class LeasingContract(models.Model):
     warning_letter_fee = fields.Monetary(string="Warning Letter Fee")
     final_letter_fee = fields.Monetary(string="Final Letter Fee")
     
-    # --- Accounting Configuration ---
     journal_id = fields.Many2one('account.journal', string="Invoicing Journal", domain=[('type','=','sale')], required=True)
-    
-    # GL Accounts logic
-    asset_account_id = fields.Many2one('account.account', string="Principal/Asset Account", 
-        help="Account credited when Principal is paid (reduces loan balance)", required=True)
-    income_account_id = fields.Many2one('account.account', string="Interest Income Account", 
-        help="Account credited for Interest Revenue", required=True)
+    asset_account_id = fields.Many2one('account.account', string="Principal/Asset Account", required=True)
+    income_account_id = fields.Many2one('account.account', string="Interest Income Account", required=True)
 
-    # Contract Lines
     line_ids = fields.One2many('leasing.contract.line', 'contract_id', string="Installments")
     
-    # Smart Buttons
     payment_count = fields.Integer(compute='_compute_payment_count', string="Payment Count")
     invoice_count = fields.Integer(compute='_compute_invoice_count', string="Invoice Count")
+    
+    # --- Logic ---
+
+    @api.onchange('product_id')
+    def _onchange_product(self):
+        if self.product_id:
+            # Auto-fill defaults from the Product itself
+            self.int_rate_pa = self.product_id.default_int_rate
+            self.residual_value_percent = self.product_id.default_rv_percentage
+            self.mileage_limit = self.product_id.annual_mileage_limit
+            self.excess_mileage_rate = self.product_id.excess_mileage_charge
+            self._onchange_rv_percent()
+
+    @api.onchange('residual_value_percent', 'cash_price')
+    def _onchange_rv_percent(self):
+        if self.residual_value_percent and self.cash_price:
+            self.residual_value = self.cash_price * (self.residual_value_percent / 100)
+
+    @api.constrains('product_id', 'agreement_date')
+    def _check_product_validity(self):
+        for rec in self:
+            if rec.product_id and rec.agreement_date:
+                if rec.product_id.date_start and rec.agreement_date < rec.product_id.date_start:
+                    raise ValidationError(f"Product not valid before {rec.product_id.date_start}.")
+                if rec.product_id.date_end and rec.agreement_date > rec.product_id.date_end:
+                    raise ValidationError(f"Product expired on {rec.product_id.date_end}.")
+    
+    @api.model
+    def create(self, vals):
+        if vals.get('agreement_no', 'New') == 'New':
+            vals['agreement_no'] = self.env['ir.sequence'].next_by_code('leasing.contract') or 'New'
+        return super(LeasingContract, self).create(vals)
     
     def _compute_payment_count(self):
         for rec in self:
@@ -147,14 +180,6 @@ class LeasingContract(models.Model):
                 ('move_type', '=', 'out_invoice')
             ])
 
-    # --- Logic Methods ---
-
-    @api.model
-    def create(self, vals):
-        if vals.get('agreement_no', 'New') == 'New':
-            vals['agreement_no'] = self.env['ir.sequence'].next_by_code('leasing.contract') or 'New'
-        return super(LeasingContract, self).create(vals)
-    
     def action_generate_schedule(self):
         self.ensure_one()
         self.line_ids.unlink()
@@ -185,21 +210,14 @@ class LeasingContract(models.Model):
             
         self.write({'line_ids': lines})
 
-    # --- CORE LOGIC: Generate Invoices for Odoo Accounting ---
     def action_create_invoices(self):
-        """ Creates standard Odoo Invoices for lines that are due but not invoiced """
         for rec in self:
-            # 1. Find lines that need invoicing
             due_lines = rec.line_ids.filtered(lambda l: not l.invoice_id and l.date_due <= fields.Date.today())
-            
             if not due_lines:
                 raise UserError(_("No installments are due for invoicing today."))
 
             for line in due_lines:
-                # 2. Prepare Invoice Lines (Split Principal & Interest)
                 invoice_lines = []
-                
-                # Line A: Principal (Reduces Asset/Receivable)
                 invoice_lines.append((0, 0, {
                     'name': f"Principal Repayment (Inst #{line.sequence})",
                     'quantity': 1,
@@ -207,49 +225,37 @@ class LeasingContract(models.Model):
                     'account_id': rec.asset_account_id.id, 
                 }))
 
-                # Line B: Interest (Income)
                 if line.amount_interest > 0:
                     invoice_lines.append((0, 0, {
                         'name': f"Interest Charges (Inst #{line.sequence})",
                         'quantity': 1,
                         'price_unit': line.amount_interest,
                         'account_id': rec.income_account_id.id,
-                        'tax_ids': [] # Add tax logic here if needed
+                        'tax_ids': []
                     }))
 
-                # 3. Create the Invoice (Account Move)
                 invoice = self.env['account.move'].create({
-                    'move_type': 'out_invoice', # Customer Invoice
+                    'move_type': 'out_invoice',
                     'partner_id': rec.hirer_id.id,
                     'invoice_date': line.date_due,
                     'date': line.date_due,
                     'journal_id': rec.journal_id.id,
-                    'invoice_origin': rec.agreement_no, # Links back to contract
+                    'invoice_origin': rec.agreement_no,
                     'ref': f"Installment {line.sequence}/{rec.no_of_inst}",
                     'invoice_line_ids': invoice_lines,
                 })
                 
-                # 4. Link back to schedule
                 line.invoice_id = invoice.id
-                
-                # 5. Optional: Auto-post the invoice
                 invoice.action_post()
             
-            # Show success message
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
-                'params': {
-                    'title': 'Success',
-                    'message': f'{len(due_lines)} Invoices created successfully!',
-                    'type': 'success',
-                    'sticky': False,
-                }
+                'params': {'title': 'Success', 'message': f'{len(due_lines)} Invoices created!', 'type': 'success'}
             }
-    
+
     @api.depends('line_ids.invoice_id.payment_state')
     def _compute_payment_status(self):
-        """ Updates Paid Amount based on real Odoo Invoice status """
         for rec in self:
             paid_lines = rec.line_ids.filtered(lambda l: l.invoice_id.payment_state in ['paid', 'in_payment'])
             rec.no_inst_paid = len(paid_lines)
