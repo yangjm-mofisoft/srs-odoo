@@ -137,11 +137,19 @@ class LeasingContract(models.Model):
     payment_count = fields.Integer(compute='_compute_payment_count', string="Payment Count")
     invoice_count = fields.Integer(compute='_compute_invoice_count', string="Invoice Count")
     
+    # Penalty Rule
+    penalty_rule_id = fields.Many2one('leasing.penalty.rule', string="Penalty Rule", 
+                                      readonly=True, states={'draft': [('readonly', False)]})
+                                      
+    total_overdue_days = fields.Integer(string="Days Overdue", compute='_compute_overdue_status', store=True)
+    accrued_penalty = fields.Monetary(string="Accrued Penalty", currency_field='currency_id', default=0.0)
+
     # --- Logic ---
 
     @api.onchange('product_id')
     def _onchange_product(self):
         if self.product_id:
+            self.penalty_rule_id = self.product_id.default_penalty_rule_id
             # Auto-fill defaults from the Product itself
             self.int_rate_pa = self.product_id.default_int_rate
             self.residual_value_percent = self.product_id.default_rv_percentage
@@ -337,3 +345,107 @@ class LeasingContract(models.Model):
             'view_mode': 'list,form',
             'domain': [('invoice_origin', '=', self.agreement_no)],
         }
+    
+    # -------------------------------------------------------------------------
+    # PENALTY & OVERDUE LOGIC (Add this to models/contract.py)
+    # -------------------------------------------------------------------------
+
+    @api.depends('line_ids.date_due', 'line_ids.invoice_id.payment_state')
+    def _compute_overdue_status(self):
+        today = fields.Date.today()
+        for rec in self:
+            # Find the oldest unpaid line that is overdue
+            overdue_lines = rec.line_ids.filtered(
+                lambda l: l.date_due and l.date_due < today and l.invoice_id.payment_state != 'paid'
+            )
+            
+            if overdue_lines:
+                # Get the earliest due date
+                earliest_due = min(overdue_lines.mapped('date_due'))
+                delta = (today - earliest_due).days
+                rec.total_overdue_days = delta
+                
+                # Auto-update Late Status based on days
+                if delta > 90:
+                    rec.late_status = 'legal'
+                elif delta > 30:
+                    rec.late_status = 'attention'
+                else:
+                    rec.late_status = 'normal'
+            else:
+                rec.total_overdue_days = 0
+                rec.late_status = 'normal'
+
+    # Cron Job to calculate late interest penalties
+    def _cron_calculate_late_interest(self):
+        """ Run nightly to calculate penalties based on the selected Rule """
+        # Ensure we only check active contracts that have a rule assigned
+        active_contracts = self.search([('ac_status', '=', 'active'), ('penalty_rule_id', '!=', False)])
+        today = fields.Date.today()
+        
+        for contract in active_contracts:
+            rule = contract.penalty_rule_id
+            penalty_amount = 0.0
+            
+            # Find overdue lines
+            overdue_lines = contract.line_ids.filtered(
+                lambda l: l.date_due and l.date_due < today and l.invoice_id.payment_state != 'paid'
+            )
+            
+            for line in overdue_lines:
+                days_late = (today - line.date_due).days
+                
+                # Check Grace Period
+                if days_late <= rule.grace_period_days:
+                    continue
+
+                if rule.method == 'daily_percent':
+                    # Logic: (Principal * Rate / 100) / 365
+                    daily_rate = (rule.rate / 100) / 365
+                    daily_penalty = line.amount_principal * daily_rate
+                    penalty_amount += daily_penalty
+                    
+                # You can implement other methods (fixed_one_time) here later
+
+            # Update the balance
+            if penalty_amount > 0:
+                contract.accrued_penalty += penalty_amount
+                contract.balance_late_charges = contract.accrued_penalty - contract.total_late_paid
+
+    
+        """ Run nightly to calculate penalties based on the selected Rule """
+        active_contracts = self.search([('ac_status', '=', 'active'), ('penalty_rule_id', '!=', False)])
+        today = fields.Date.today()
+        
+        for contract in active_contracts:
+            rule = contract.penalty_rule_id
+            penalty_amount = 0.0
+            
+            # Find overdue lines
+            overdue_lines = contract.line_ids.filtered(
+                lambda l: l.date_due < today and l.invoice_id.payment_state != 'paid'
+            )
+            
+            for line in overdue_lines:
+                days_late = (today - line.date_due).days
+                
+                # Check Grace Period
+                if days_late <= rule.grace_period_days:
+                    continue
+
+                if rule.method == 'daily_percent':
+                    # Logic: (Principal * Rate / 100) / 365
+                    daily_rate = (rule.rate / 100) / 365
+                    daily_penalty = line.amount_principal * daily_rate
+                    penalty_amount += daily_penalty
+                    
+                elif rule.method == 'fixed_one_time':
+                    # Only charge once on the first day after grace period
+                    # (This logic is tricky in a recurring cron; usually requires a separate flag or line item. 
+                    # For simplicity, we stick to daily interest logic here primarily.)
+                    pass 
+
+            # Update the balance
+            if penalty_amount > 0:
+                contract.accrued_penalty += penalty_amount
+                contract.balance_late_charges = contract.accrued_penalty - contract.total_late_paid

@@ -69,7 +69,6 @@
                             <field name="entry_date"/>
                         </group>
                     </group>
-
                     <notebook>
                         <page string="Main">
                             <group>
@@ -166,12 +165,17 @@
                         </page>
 
                         <page string="O/S">
-                            <group>
+                            <group string="Outstanding Balances">
                                 <field name="os_balance"/>
                                 <field name="balance_late_charges"/>
                                 <field name="balance_misc_fee"/>
                                 <field name="total_payable" decoration-bf="1"/>
                                 <field name="next_inst_date"/>
+                            </group>
+                            <group string="Penalty Status">
+                                <field name="penalty_rule_id"/>
+                                <field name="total_overdue_days" decoration-danger="total_overdue_days > 0"/>
+                                <field name="accrued_penalty" widget="monetary" decoration-danger="accrued_penalty > 0"/>
                             </group>
                         </page>
 

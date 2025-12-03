@@ -50,4 +50,10 @@
     <menuitem id="menu_leasing_taxes" name="Taxes" parent="menu_leasing_config" 
               action="account.action_tax_form" sequence="20" groups="account.group_account_manager"/>
 
+    <menuitem id="menu_leasing_penalty_rules" 
+              name="Penalty Rules" 
+              parent="menu_leasing_config" 
+              action="action_leasing_penalty_rule" 
+              sequence="6"/>
+
 </odoo>

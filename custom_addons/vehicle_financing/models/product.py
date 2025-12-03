@@ -34,6 +34,9 @@ class LeasingProduct(models.Model):
     annual_mileage_limit = fields.Integer(string="Annual Mileage Limit (km)")
     excess_mileage_charge = fields.Monetary(string="Excess Mileage Charge (per km)")
     
+    # Penalty setting
+    default_penalty_rule_id = fields.Many2one('leasing.penalty.rule', string="Default Penalty Rule")
+
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
     @api.constrains('date_start', 'date_end')
