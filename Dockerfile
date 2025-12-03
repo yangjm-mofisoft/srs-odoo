@@ -2,7 +2,6 @@
 FROM python:3.12-slim-bookworm
 
 # 1. Install System Dependencies
-# specific libraries required for Odoo (Postgres client, LDAP, XML/XSLT, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     build-essential \
@@ -21,31 +20,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     adduser \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Create Odoo user and directory
+# 2. Create Odoo user and directories FIRST
+# We create the user early so we can assign permissions before filling folders
+# This prevents the "useradd warning" and the slow "chown" step later
+RUN useradd -m -d /var/lib/odoo -s /bin/bash odoo && \
+    mkdir -p /etc/odoo /mnt/extra-addons /var/lib/odoo /opt/odoo && \
+    chown -R odoo:odoo /opt/odoo /etc/odoo /mnt/extra-addons /var/lib/odoo
+
+# 3. Switch to Odoo user for cloning
+# By cloning AS the user, files are automatically owned by 'odoo'.
+# No massive 'chown' needed later!
+USER odoo
 WORKDIR /opt/odoo
 
-# 3. Clone Odoo Source Code (Master Branch = Odoo 19)
-# --depth 1 makes the download faster (only latest commit)
 RUN git clone --depth 1 --branch master https://github.com/odoo/odoo.git .
 
-# 4. Install Odoo Python Requirements
+# 4. Switch back to Root to install Python packages
+# pip needs root access to install global packages
+USER root
 RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir -r requirements.txt
 
-# 5. Create specific directories for config and addons
-RUN mkdir -p /etc/odoo /mnt/extra-addons /var/lib/odoo
-
-# 6. Set permissions
-# We create a user 'odoo' to run the application securely
-RUN useradd -m -d /var/lib/odoo -s /bin/bash odoo && \
-    chown -R odoo:odoo /opt/odoo /etc/odoo /mnt/extra-addons /var/lib/odoo
-
-# 7. Switch to Odoo user
+# 5. Switch back to Odoo user for runtime
 USER odoo
 
-# 8. Define Entrypoint
-# Runs odoo-bin directly from the source folder
+# 6. Define Entrypoint
 ENTRYPOINT ["python3", "/opt/odoo/odoo-bin"]
-
-# Default command uses the config file
 CMD ["-c", "/etc/odoo/odoo.conf"]
