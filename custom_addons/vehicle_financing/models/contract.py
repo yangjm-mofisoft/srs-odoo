@@ -376,6 +376,18 @@ class LeasingContract(models.Model):
                 rec.total_overdue_days = 0
                 rec.late_status = 'normal'
 
+    # Action to open Early Settlement Wizard
+    def action_early_settlement(self):
+        self.ensure_one()
+        return {
+            'name': 'Early Settlement',
+            'type': 'ir.actions.act_window',
+            'res_model': 'leasing.settlement.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_contract_id': self.id, 'active_id': self.id}
+        }
+    
     # Cron Job to calculate late interest penalties
     def _cron_calculate_late_interest(self):
         """ Run nightly to calculate penalties based on the selected Rule """

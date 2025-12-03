@@ -38,6 +38,9 @@
                     <button name="action_create_invoices" string="Post Due Invoices" type="object" 
                         invisible="ac_status != 'active'" class="btn-secondary"/>
 
+                    <button name="action_early_settlement" string="Early Settlement" type="object" 
+                        invisible="ac_status != 'active'" class="btn-warning"/>
+
                     <button name="action_close" string="Close Account" type="object" 
                             invisible="ac_status != 'active'"/>
                     

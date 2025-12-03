@@ -6,3 +6,4 @@ access_leasing_dealer,leasing.dealer,model_leasing_dealer,base.group_user,1,1,1,
 access_leasing_charge,leasing.charge,model_leasing_charge,base.group_user,1,1,1,1
 access_leasing_product,leasing.product,model_leasing_product,base.group_user,1,1,1,1
 access_leasing_penalty_rule,leasing.penalty.rule,model_leasing_penalty_rule,base.group_user,1,1,1,1
+access_leasing_settlement_wizard,leasing.settlement.wizard,model_leasing_settlement_wizard,base.group_user,1,1,1,1
