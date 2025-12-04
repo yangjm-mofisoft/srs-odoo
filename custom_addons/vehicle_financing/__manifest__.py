@@ -10,6 +10,7 @@
         'data/sequence.xml',
         'data/cron.xml',
         'views/vehicle_views.xml',
+        'views/res_partner_views.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
         'views/contract_views.xml',

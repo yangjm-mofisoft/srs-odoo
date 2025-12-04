@@ -1,0 +1,353 @@
+web-1  | 2025-12-04 02:58:19,757 1 INFO ? odoo.service.server: Initiating shutdown 
+web-1  | 2025-12-04 02:58:19,757 1 INFO ? odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+web-1  | 2025-12-04 02:58:20,076 1 INFO ? odoo.sql_db: ConnectionPool(read/write;used=0/count=0/max=64): Closed 4 connections  
+web-1  | 2025-12-04 02:58:21,021 1 INFO ? odoo: Odoo version 19.1a1 
+web-1  | 2025-12-04 02:58:21,023 1 INFO ? odoo: Using configuration file at /etc/odoo/odoo.conf 
+web-1  | 2025-12-04 02:58:21,023 1 INFO ? odoo: addons paths: _NamespacePath(['/opt/odoo/odoo/addons', '/var/lib/odoo/addons/19.1', '/mnt/extra-addons', '/opt/odoo/addons']) 
+web-1  | 2025-12-04 02:58:21,024 1 INFO ? odoo: database: odoo@db:5432 
+web-1  | 2025-12-04 02:58:21,248 1 INFO ? odoo.service.server: HTTP service (werkzeug) running on ffa76587b497:8069 
+web-1  | 2025-12-04 02:58:35,199 1 INFO vfs odoo.modules.loading: loading 1 modules... 
+web-1  | 2025-12-04 02:58:35,202 1 INFO vfs odoo.modules.loading: 1 modules loaded in 0.00s, 0 queries (+0 extra) 
+web-1  | 2025-12-04 02:58:35,335 1 INFO vfs odoo.modules.loading: loading 61 modules... 
+web-1  | 2025-12-04 02:58:36,332 1 WARNING vfs odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+web-1  | 2025-12-04 02:58:36,336 1 INFO vfs odoo.modules.loading: 61 modules loaded in 1.00s, 0 queries (+0 extra) 
+web-1  | 2025-12-04 02:58:36,401 1 WARNING vfs odoo.fields: Field leasing.contract.penalty_rule_id: unknown parameter 'states', if this is an actual parameter you may want to override the method _valid_field_parameter on the relevant model in order to allow it 
+web-1  | 2025-12-04 02:58:36,418 1 INFO vfs odoo.modules.loading: Modules loaded. 
+web-1  | 2025-12-04 02:58:36,424 1 WARNING vfs odoo.schema: Missing not-null constraint on leasing.contract.interest_method 
+web-1  | 2025-12-04 02:58:36,425 1 WARNING vfs odoo.schema: Missing not-null constraint on leasing.contract.payment_scheme 
+web-1  | 2025-12-04 02:58:36,442 1 INFO vfs odoo.registry: Registry loaded in 1.256s 
+web-1  | 2025-12-04 02:58:36,443 1 INFO vfs odoo.addons.base.models.ir_http: Generating routing map for key None 
+web-1  | 2025-12-04 02:58:36,457 1 INFO vfs odoo.addons.base.models.res_device: User 2 inserts device log (h7g5hf6_ExEJ5C-hO8dfpgocuICxb8pE1fK4F49Bm0) 
+web-1  | 2025-12-04 02:58:36,472 1 ERROR vfs odoo.sql_db: bad query: b'SELECT "res_partner"."id", "res_partner"."name", "res_partner"."complete_name", "res_partner"."parent_id", "res_partner"."ref", "res_partner"."lang", "res_partner"."tz", "res_partner"."user_id", "res_partner"."vat", "res_partner"."company_registry", "res_partner"."website", "res_partner"."comment", "res_partner"."active", "res_partner"."employee", "res_partner"."function", "res_partner"."type", "res_partner"."street", "res_partner"."street2", "res_partner"."zip", "res_partner"."city", "res_partner"."state_id", "res_partner"."country_id", "res_partner"."partner_latitude", "res_partner"."partner_longitude", "res_partner"."email", "res_partner"."phone", "res_partner"."is_company", "res_partner"."industry_id", "res_partner"."company_id", "res_partner"."color", "res_partner"."partner_share", "res_partner"."commercial_partner_id", "res_partner"."commercial_company_name", "res_partner"."company_name", "res_partner"."create_uid", "res_partner"."create_date", "res_partner"."write_uid", "res_partner"."write_date", "res_partner"."email_normalized", "res_partner"."message_bounce", "res_partner"."signup_type", "res_partner"."phone_sanitized", "res_partner"."invoice_template_pdf_report_id", "res_partner"."supplier_rank", "res_partner"."customer_rank", "res_partner"."autopost_bills", "res_partner"."peppol_endpoint", "res_partner"."peppol_eas", "res_partner"."purchase_warn_msg", "res_partner"."buyer_id", "res_partner"."l10n_sg_unique_entity_number", "res_partner"."sale_warn_msg", "res_partner"."is_leasing_guarantor", "res_partner"."is_leasing_broker", "res_partner"."is_leasing_joint_hirer", "res_partner"."leasing_blacklist", "res_partner"."leasing_blacklist_reason" FROM "res_partner" WHERE "res_partner"."id" IN (3)'
+web-1  | ERROR: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  |  
+web-1  | 2025-12-04 02:58:36,473 1 ERROR vfs odoo.http: Exception during request handling. 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/odoo/http.py", line 2858, in __call__
+web-1  |     response = request._serve_db()
+web-1  |                ^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 2327, in _serve_db
+web-1  |     raise self._update_served_exception(exc)
+web-1  |   File "/opt/odoo/odoo/http.py", line 2325, in _serve_db
+web-1  |     return service_model.retrying(serve_func, env=self.env)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/service/model.py", line 183, in retrying
+web-1  |     result = func()
+web-1  |              ^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 2380, in _serve_ir_http
+web-1  |     response = self.dispatcher.dispatch(rule.endpoint, args)
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 2508, in dispatch
+web-1  |     return self.request.registry['ir.http']._dispatch(endpoint)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_http.py", line 351, in _dispatch
+web-1  |     result = endpoint(**request.params)
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 785, in route_wrapper
+web-1  |     result = endpoint(self, *args, **params_ok)
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/portal/controllers/web.py", line 27, in web_client
+web-1  |     return super().web_client(s_action, **kw)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 785, in route_wrapper
+web-1  |     result = endpoint(self, *args, **params_ok)
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/web/controllers/home.py", line 68, in web_client
+web-1  |     context = request.env['ir.http'].webclient_rendering_context()
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/web/models/ir_http.py", line 69, in webclient_rendering_context
+web-1  |     'session_info': self.session_info(),
+web-1  |                     ^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/spreadsheet/models/ir_http.py", line 14, in session_info
+web-1  |     res = super().session_info()
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/partner_autocomplete/models/ir_http.py", line 12, in session_info
+web-1  |     session_info = super().session_info()
+web-1  |                    ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/mail/models/ir_http.py", line 13, in session_info
+web-1  |     result = super().session_info()
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/web_tour/models/ir_http.py", line 8, in session_info
+web-1  |     result = super().session_info()
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/bus/models/ir_http.py", line 17, in session_info
+web-1  |     session_info = super().session_info()
+web-1  |                    ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/base_setup/models/ir_http.py", line 10, in session_info
+web-1  |     result = super(IrHttp, self).session_info()
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/web/models/ir_http.py", line 85, in session_info
+web-1  |     user_context = dict(self.env['res.users'].context_get())
+web-1  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/tools/cache.py", line 87, in lookup
+web-1  |     return self.lookup(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/tools/cache.py", line 140, in lookup
+web-1  |     value = self.method(*args, **kwargs)
+web-1  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/res_users.py", line 703, in context_get
+web-1  |     context = self.env.user.read(['lang', 'tz'], load=False)[0]
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/res_users.py", line 569, in read
+web-1  |     return super().read(fields=fields, load=load)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 2821, in read
+web-1  |     return self._read_format(fnames=fields, load=load)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3078, in _read_format
+web-1  |     vals[name] = convert(record[name], record, use_display_name)
+web-1  |                          ~~~~~~^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 6075, in __getitem__
+web-1  |     return self._fields[key].__get__(self)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1781, in __get__
+web-1  |     self.compute_value(recs)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1952, in compute_value
+web-1  |     records._compute_field_value(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 4345, in _compute_field_value
+web-1  |     determine(field.compute, self)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 85, in determine
+web-1  |     return needle(records, *args)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 751, in _compute_related
+web-1  |     record[self.name] = self._process_related(value[self.related_field.name], record.env)
+web-1  |                                               ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 6075, in __getitem__
+web-1  |     return self._fields[key].__get__(self)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1737, in __get__
+web-1  |     recs._fetch_field(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3103, in _fetch_field
+web-1  |     self.fetch(fnames)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3143, in fetch
+web-1  |     fetched = self._fetch_query(query, fields_to_fetch)
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3251, in _fetch_query
+web-1  |     rows = self.env.execute_query(query.select(*sql_terms))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/environments.py", line 550, in execute_query
+web-1  |     self.cr.execute(query)
+web-1  |   File "/opt/odoo/odoo/sql_db.py", line 416, in execute
+web-1  |     self._obj.execute(query, params)
+web-1  | psycopg2.errors.UndefinedColumn: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  | 
+web-1  | 2025-12-04 02:58:36,476 1 INFO vfs werkzeug: 172.19.0.1 - - [04/Dec/2025 02:58:36] "GET /odoo/apps HTTP/1.1" 500 - 28 0.018 1.274
+web-1  | 2025-12-04 02:58:36,680 1 ERROR vfs odoo.sql_db: bad query: b'SELECT "res_partner"."id", "res_partner"."name", "res_partner"."complete_name", "res_partner"."parent_id", "res_partner"."ref", "res_partner"."lang", "res_partner"."tz", "res_partner"."user_id", "res_partner"."vat", "res_partner"."company_registry", "res_partner"."website", "res_partner"."comment", "res_partner"."active", "res_partner"."employee", "res_partner"."function", "res_partner"."type", "res_partner"."street", "res_partner"."street2", "res_partner"."zip", "res_partner"."city", "res_partner"."state_id", "res_partner"."country_id", "res_partner"."partner_latitude", "res_partner"."partner_longitude", "res_partner"."email", "res_partner"."phone", "res_partner"."is_company", "res_partner"."industry_id", "res_partner"."company_id", "res_partner"."color", "res_partner"."partner_share", "res_partner"."commercial_partner_id", "res_partner"."commercial_company_name", "res_partner"."company_name", "res_partner"."create_uid", "res_partner"."create_date", "res_partner"."write_uid", "res_partner"."write_date", "res_partner"."email_normalized", "res_partner"."message_bounce", "res_partner"."signup_type", "res_partner"."phone_sanitized", "res_partner"."invoice_template_pdf_report_id", "res_partner"."supplier_rank", "res_partner"."customer_rank", "res_partner"."autopost_bills", "res_partner"."peppol_endpoint", "res_partner"."peppol_eas", "res_partner"."purchase_warn_msg", "res_partner"."buyer_id", "res_partner"."l10n_sg_unique_entity_number", "res_partner"."sale_warn_msg", "res_partner"."is_leasing_guarantor", "res_partner"."is_leasing_broker", "res_partner"."is_leasing_joint_hirer", "res_partner"."leasing_blacklist", "res_partner"."leasing_blacklist_reason" FROM "res_partner" WHERE "res_partner"."id" IN (3)'
+web-1  | ERROR: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  |  
+web-1  | 2025-12-04 02:58:36,681 1 ERROR vfs odoo.addons.http_routing.models.ir_http: Couldn't render a template for http status 404 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 756, in _render_iterall
+web-1  |     for item in frame.iterator:
+web-1  |                 ^^^^^^^^^^^^^^
+web-1  |   File "<598>", line 161, in template_portal_user_dropdown_598
+web-1  |   File "<598>", line 94, in template_portal_user_dropdown_598_content
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1781, in __get__
+web-1  |     self.compute_value(recs)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1952, in compute_value
+web-1  |     records._compute_field_value(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 4345, in _compute_field_value
+web-1  |     determine(field.compute, self)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 85, in determine
+web-1  |     return needle(records, *args)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 751, in _compute_related
+web-1  |     record[self.name] = self._process_related(value[self.related_field.name], record.env)
+web-1  |                                               ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 6075, in __getitem__
+web-1  |     return self._fields[key].__get__(self)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1737, in __get__
+web-1  |     recs._fetch_field(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3103, in _fetch_field
+web-1  |     self.fetch(fnames)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3143, in fetch
+web-1  |     fetched = self._fetch_query(query, fields_to_fetch)
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3251, in _fetch_query
+web-1  |     rows = self.env.execute_query(query.select(*sql_terms))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/environments.py", line 550, in execute_query
+web-1  |     self.cr.execute(query)
+web-1  |   File "/opt/odoo/odoo/sql_db.py", line 416, in execute
+web-1  |     self._obj.execute(query, params)
+web-1  | psycopg2.errors.UndefinedColumn: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  | 
+web-1  | 
+web-1  | The above exception was the direct cause of the following exception:
+web-1  | 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/addons/http_routing/models/ir_http.py", line 600, in _handle_error
+web-1  |     code, html = cls._get_error_html(request.env, code, values)
+web-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/http_routing/models/ir_http.py", line 563, in _get_error_html
+web-1  |     return code, env['ir.ui.view']._render_template('http_routing.%s' % code, values)
+web-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 2524, in _render_template
+web-1  |     return self.env['ir.qweb']._render(template, values)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 728, in _render
+web-1  |     return Markup(''.join(iterator))
+web-1  |                   ^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 850, in _render_iterall
+web-1  |     raise QWebError(qweb_error_info) from error
+web-1  | odoo.addons.base.models.ir_qweb.QWebError: Error while rendering the template:
+web-1  |     UndefinedColumn: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  | 
+web-1  |     Template: portal.user_dropdown
+web-1  |     Reference: 598
+web-1  |     Path: /t/li/a/span
+web-1  |     Element: <span t-if="_user_name" t-attf-class="#{_user_name_class}" t-out="user_id.name[:23] + \'...\' if user_id.name and len(user_id.name) &gt; 25 else user_id.name"/>
+web-1  |     From: (262, '/t/t', '<t t-call="web.frontend_layout"/>')
+web-1  |           (185, '/t/html/body/div/header/nav/div/ul/t[2]', '<t t-call="portal.user_dropdown"/>')
+web-1  |           (598, '/t/li/a/span', '<span t-if="_user_name" t-attf-class="#{_user_name_class}" t-out="user_id.name[:23] + \\\'...\\\' if user_id.name and len(user_id.name) &gt; 25 else user_id.name"/>')
+web-1  | 2025-12-04 02:58:36,683 1 ERROR vfs odoo.sql_db: bad query: b'SELECT "ir_ui_view"."id", "ir_ui_view"."name", "ir_ui_view"."model", "ir_ui_view"."key", "ir_ui_view"."priority", "ir_ui_view"."type", "ir_ui_view"."arch_db"->>\'en_US\', "ir_ui_view"."arch_fs", "ir_ui_view"."arch_updated", "ir_ui_view"."arch_prev", "ir_ui_view"."inherit_id", "ir_ui_view"."mode", "ir_ui_view"."active", "ir_ui_view"."create_uid", "ir_ui_view"."create_date", "ir_ui_view"."write_uid", "ir_ui_view"."write_date", "ir_ui_view"."customize_show" FROM "ir_ui_view" WHERE ("ir_ui_view"."active" IS TRUE AND "ir_ui_view"."key" IN (\'http_routing.http_error\')) ORDER BY "ir_ui_view"."priority"  , "ir_ui_view"."id"  '
+web-1  | ERROR: current transaction is aborted, commands ignored until end of transaction block
+web-1  |  
+web-1  | 2025-12-04 02:58:36,698 1 ERROR vfs odoo.http: Exception during request handling. 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 756, in _render_iterall
+web-1  |     for item in frame.iterator:
+web-1  |                 ^^^^^^^^^^^^^^
+web-1  |   File "<598>", line 161, in template_portal_user_dropdown_598
+web-1  |   File "<598>", line 94, in template_portal_user_dropdown_598_content
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1781, in __get__
+web-1  |     self.compute_value(recs)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1952, in compute_value
+web-1  |     records._compute_field_value(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 4345, in _compute_field_value
+web-1  |     determine(field.compute, self)
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 85, in determine
+web-1  |     return needle(records, *args)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 751, in _compute_related
+web-1  |     record[self.name] = self._process_related(value[self.related_field.name], record.env)
+web-1  |                                               ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 6075, in __getitem__
+web-1  |     return self._fields[key].__get__(self)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/fields.py", line 1737, in __get__
+web-1  |     recs._fetch_field(self)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3103, in _fetch_field
+web-1  |     self.fetch(fnames)
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3143, in fetch
+web-1  |     fetched = self._fetch_query(query, fields_to_fetch)
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3251, in _fetch_query
+web-1  |     rows = self.env.execute_query(query.select(*sql_terms))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/environments.py", line 550, in execute_query
+web-1  |     self.cr.execute(query)
+web-1  |   File "/opt/odoo/odoo/sql_db.py", line 416, in execute
+web-1  |     self._obj.execute(query, params)
+web-1  | psycopg2.errors.UndefinedColumn: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  | 
+web-1  | 
+web-1  | The above exception was the direct cause of the following exception:
+web-1  | 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/addons/http_routing/models/ir_http.py", line 600, in _handle_error
+web-1  |     code, html = cls._get_error_html(request.env, code, values)
+web-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/http_routing/models/ir_http.py", line 563, in _get_error_html
+web-1  |     return code, env['ir.ui.view']._render_template('http_routing.%s' % code, values)
+web-1  |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 2524, in _render_template
+web-1  |     return self.env['ir.qweb']._render(template, values)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 728, in _render
+web-1  |     return Markup(''.join(iterator))
+web-1  |                   ^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 850, in _render_iterall
+web-1  |     raise QWebError(qweb_error_info) from error
+web-1  | odoo.addons.base.models.ir_qweb.QWebError: Error while rendering the template:
+web-1  |     UndefinedColumn: column res_partner.is_leasing_guarantor does not exist
+web-1  | LINE 1: ...ue_entity_number", "res_partner"."sale_warn_msg", "res_partn...
+web-1  |                                                              ^
+web-1  | 
+web-1  |     Template: portal.user_dropdown
+web-1  |     Reference: 598
+web-1  |     Path: /t/li/a/span
+web-1  |     Element: <span t-if="_user_name" t-attf-class="#{_user_name_class}" t-out="user_id.name[:23] + \'...\' if user_id.name and len(user_id.name) &gt; 25 else user_id.name"/>
+web-1  |     From: (262, '/t/t', '<t t-call="web.frontend_layout"/>')
+web-1  |           (185, '/t/html/body/div/header/nav/div/ul/t[2]', '<t t-call="portal.user_dropdown"/>')
+web-1  |           (598, '/t/li/a/span', '<span t-if="_user_name" t-attf-class="#{_user_name_class}" t-out="user_id.name[:23] + \\\'...\\\' if user_id.name and len(user_id.name) &gt; 25 else user_id.name"/>')
+web-1  | 
+web-1  | During handling of the above exception, another exception occurred:
+web-1  | 
+web-1  | Traceback (most recent call last):
+web-1  |   File "/opt/odoo/odoo/http.py", line 2858, in __call__
+web-1  |     response = request._serve_db()
+web-1  |                ^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 2327, in _serve_db
+web-1  |     raise self._update_served_exception(exc)
+web-1  |   File "/opt/odoo/odoo/http.py", line 2325, in _serve_db
+web-1  |     return service_model.retrying(serve_func, env=self.env)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/service/model.py", line 183, in retrying
+web-1  |     result = func()
+web-1  |              ^^^^^^
+web-1  |   File "/opt/odoo/odoo/http.py", line 2370, in _serve_ir_http_fallback
+web-1  |     no_fallback.error_response = self.registry['ir.http']._handle_error(no_fallback)
+web-1  |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/addons/http_routing/models/ir_http.py", line 603, in _handle_error
+web-1  |     code, html = 418, request.env['ir.ui.view']._render_template('http_routing.http_error', values)
+web-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 2524, in _render_template
+web-1  |     return self.env['ir.qweb']._render(template, values)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 728, in _render
+web-1  |     return Markup(''.join(iterator))
+web-1  |                   ^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 784, in _render_iterall
+web-1  |     template_functions, def_name, options = irQweb._compile(params.view_ref)
+web-1  |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 935, in _compile
+web-1  |     ref = self._get_template_info(template)['id']
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_qweb.py", line 923, in _get_template_info
+web-1  |     return self.env['ir.ui.view']._get_cached_template_info(template)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/tools/cache.py", line 87, in lookup
+web-1  |     return self.lookup(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/tools/cache.py", line 140, in lookup
+web-1  |     value = self.method(*args, **kwargs)
+web-1  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 1140, in _get_cached_template_info
+web-1  |     preload = self.sudo()._preload_views([id_or_xmlid])
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 1258, in _preload_views
+web-1  |     unknown_views = self._fetch_template_views(missing_refs)
+web-1  |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/addons/base/models/ir_ui_view.py", line 1183, in _fetch_template_views
+web-1  |     views = IrUiView.search_fetch(domain, field_names, order=self._get_template_order())
+web-1  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 1416, in search_fetch
+web-1  |     fetched = self._fetch_query(query, fields_to_fetch)
+web-1  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/models.py", line 3251, in _fetch_query
+web-1  |     rows = self.env.execute_query(query.select(*sql_terms))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/opt/odoo/odoo/orm/environments.py", line 550, in execute_query
+web-1  |     self.cr.execute(query)
+web-1  |   File "/opt/odoo/odoo/sql_db.py", line 416, in execute
+web-1  |     self._obj.execute(query, params)
+web-1  | psycopg2.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block
+web-1  | 
+web-1  | 2025-12-04 02:58:36,700 1 INFO vfs werkzeug: 172.19.0.1 - - [04/Dec/2025 02:58:36] "GET /favicon.ico HTTP/1.1" 500 - 58 0.020 0.104
+web-1  | 2025-12-04 02:58:38,095 1 INFO vfs odoo.addons.base.models.res_device: User 2 inserts device log (h7g5hf6_ExEJ5C-hO8dfpgocuICxb8pE1fK4F49Bm0) 
+web-1  | 2025-12-04 02:58:38,097 1 INFO vfs werkzeug: 172.19.0.1 - - [04/Dec/2025 02:58:38] "GET /web/service-worker.js HTTP/1.1" 200 - 3 0.001 0.004
+web-1  | 2025-12-04 02:58:38,104 1 INFO ? werkzeug: 172.19.0.1 - - [04/Dec/2025 02:58:38] "GET /mail/static/lib/idb-keyval/idb-keyval.js HTTP/1.1" 304 - 0 0.000 0.001

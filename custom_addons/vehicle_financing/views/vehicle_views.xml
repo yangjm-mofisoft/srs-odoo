@@ -34,6 +34,7 @@
                             <field name="model"/>
                             <field name="year"/>
                             <field name="color"/>
+                            <field name="internal_asset_code"/>
                         </group>
                         <group>
                             <field name="engine_no"/>

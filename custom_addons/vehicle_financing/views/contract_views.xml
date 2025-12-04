@@ -81,6 +81,12 @@
                                     <field name="product_type" readonly="1"/>
                                     <field name="hp_ac_no"/>
                                     <field name="ic_no"/>
+                                    <field name="guarantor_ids" widget="many2many_tags" 
+                                        options="{'color_field': 'color'}" 
+                                        placeholder="Select Guarantors..."/>
+                                    <field name="joint_hirer_ids" widget="many2many_tags" 
+                                        options="{'color_field': 'color'}" 
+                                        placeholder="Select Co-Borrowers..."/>
                                     <field name="finance_company_id"/>
                                     <field name="submit_date"/>
                                     <field name="entry_staff_id"/>
@@ -91,9 +97,11 @@
                                     <field name="model"/>
                                 </group>
                                 <group string="Terms">
+                                    <field name="is_hp_act" decoration-danger="not is_hp_act" decoration-success="is_hp_act" widget="boolean_toggle"/>
+                                    <field name="interest_method" widget="radio"/>
+                                    <field name="payment_scheme" widget="radio"/>
                                     <field name="inst_day"/>
                                     <field name="period_type"/>
-                                    <field name="installment_type"/>
                                     <field name="late_status"/>
                                     <field name="cal_period"/>
                                 </group>

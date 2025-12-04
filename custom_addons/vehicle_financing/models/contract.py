@@ -65,6 +65,21 @@ class LeasingContract(models.Model):
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
     # --- Financials ---
+    is_hp_act = fields.Boolean(string="HP Act (<$55k)", compute='_compute_hp_act', store=True,
+                               help="Automatically checked if Loan Amount is $55,000 or less.")
+    
+    interest_method = fields.Selection([
+        ('flat', 'Flat Rate (Straight Line)'),
+        ('rule78', 'Rule of 78 (Sum of Digits)')
+    ], string="Interest Method", default='rule78', required=True,
+       help="Method used to allocate interest across installments.")
+
+    payment_scheme = fields.Selection([
+        ('arrears', 'Arrears (Normal)'),
+        ('advance', 'Advance (Front Payment)')
+    ], string="Payment Scheme", default='arrears', required=True,
+       help="Arrears: 1st payment is due 1 month after start.\nAdvance: 1st payment is collected immediately.")
+    
     cash_price = fields.Monetary(string="Cash Price")
     down_payment = fields.Monetary(string="Down Payment")
     
@@ -144,8 +159,37 @@ class LeasingContract(models.Model):
     total_overdue_days = fields.Integer(string="Days Overdue", compute='_compute_overdue_status', store=True)
     accrued_penalty = fields.Monetary(string="Accrued Penalty", currency_field='currency_id', default=0.0)
 
-    # --- Logic ---
+    # 1. GUARANTORS (Multiple)
+    guarantor_ids = fields.Many2many(
+        'res.partner',
+        relation='leasing_contract_guarantor_rel',  # <--- Specific Table Name
+        column1='contract_id',
+        column2='partner_id',
+        string="Guarantors",
+        domain="[('is_leasing_guarantor', '=', True)]",
+        help="Parties who guarantee the loan if the Hirer defaults."
+    )
 
+    # 2. CO-BORROWERS / JOINT HIRERS (Multiple)
+    joint_hirer_ids = fields.Many2many(
+        'res.partner',
+        relation='leasing_contract_joint_hirer_rel', # <--- Specific Table Name
+        column1='contract_id',
+        column2='partner_id',
+        string="Co-Borrowers",
+        domain="[('is_leasing_joint_hirer', '=', True)]",
+        help="Parties who share liability and ownership (Joint Hirers)."
+    )
+
+    # --- Logic ---
+    
+    @api.depends('loan_amount')
+    def _compute_hp_act(self):
+        # Requirement: HP Act applies if Financed Amount <= 55,000
+        limit = 55000.0  # Ideally, move this to System Parameters later
+        for rec in self:
+            rec.is_hp_act = (rec.loan_amount <= limit)
+    
     @api.onchange('product_id')
     def _onchange_product(self):
         if self.product_id:
@@ -188,6 +232,9 @@ class LeasingContract(models.Model):
                 ('move_type', '=', 'out_invoice')
             ])
 
+    # --------------------------------------------------------
+    # LOGIC UPDATE: SCHEDULE GENERATION (RULE OF 78)
+    # --------------------------------------------------------
     def action_generate_schedule(self):
         self.ensure_one()
         self.line_ids.unlink()
@@ -195,26 +242,78 @@ class LeasingContract(models.Model):
         if not self.no_of_inst or not self.monthly_inst:
             raise UserError("Please set Number of Installments and Monthly Installment amount.")
 
-        start_date = self.first_due_date or fields.Date.today()
+        # 1. Determine Start Date based on Payment Scheme
+        start_date = self.first_due_date
+        if not start_date:
+            base_date = self.agreement_date or fields.Date.today()
+            if self.payment_scheme == 'advance':
+                # Front payment: Due immediately on agreement date
+                start_date = base_date
+            else:
+                # Normal arrears: Due 1 month after
+                start_date = base_date + relativedelta(months=1)
+
         lines = []
-        monthly_principal_base = self.loan_amount / self.no_of_inst
+        
+        # 2. Setup Variables for Calculation
+        n = self.no_of_inst
+        total_principal = self.loan_amount
+        total_interest = self.term_charges
+        monthly_inst = self.monthly_inst
+        
+        # Rule of 78 Denominator: Sum of Digits = n * (n + 1) / 2
+        # Example: For 12 months, SOD = 78.
+        sum_of_digits = (n * (n + 1)) / 2 if self.interest_method == 'rule78' else 0
+        
+        # Trackers for rounding adjustments
+        allocated_principal = 0.0
+        allocated_interest = 0.0
 
-        for i in range(1, self.no_of_inst + 1):
+        for i in range(1, n + 1):
             date_due = start_date + relativedelta(months=i-1)
-            principal = monthly_principal_base
-            interest = self.monthly_inst - principal
             
-            if i == self.no_of_inst:
-                principal = self.loan_amount - sum(l[2]['amount_principal'] for l in lines)
-                interest = self.monthly_inst - principal
+            # --- A. Interest Calculation ---
+            if self.interest_method == 'rule78':
+                # Rule of 78 Formula: 
+                # Interest_k = Total_Interest * (Remaining_Months / Sum_of_Digits)
+                # For month 1 of 12, Remaining weight is 12. For month 12, it is 1.
+                weight = n - i + 1
+                interest_portion = total_interest * (weight / sum_of_digits)
+            else:
+                # Flat Rate: Evenly distributed
+                interest_portion = total_interest / n
+            
+            # Rounding to 2 decimal places is crucial for currency
+            interest_portion = round(interest_portion, 2)
+            
+            # --- B. Principal Calculation ---
+            # Standard: Principal = Installment - Interest
+            principal_portion = monthly_inst - interest_portion
+            
+            # --- C. Final Installment Adjustment ---
+            # The last line must absorb all rounding errors to ensure 
+            # Total Principal == Loan Amount and Total Interest == Term Charges.
+            if i == n:
+                principal_portion = total_principal - allocated_principal
+                interest_portion = total_interest - allocated_interest
+                
+                # Recalculate total installment for the final month
+                amount_total = principal_portion + interest_portion
+            else:
+                amount_total = monthly_inst
 
+            # Append the line
             lines.append((0, 0, {
                 'sequence': i,
                 'date_due': date_due,
-                'amount_principal': principal,
-                'amount_interest': interest,
-                'amount_total': self.monthly_inst,
+                'amount_principal': principal_portion,
+                'amount_interest': interest_portion,
+                'amount_total': amount_total,
             }))
+            
+            # Update trackers
+            allocated_principal += principal_portion
+            allocated_interest += interest_portion
             
         self.write({'line_ids': lines})
 
