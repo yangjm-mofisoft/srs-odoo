@@ -1,7 +1,1 @@
-custom_addons/vehicle_financing/__pycache__/__init__.cpython-312.pyc
-custom_addons/vehicle_financing/__pycache__/models.cpython-312.pyc
-custom_addons/vehicle_financing/models/__pycache__/__init__.cpython-312.pyc
-custom_addons/vehicle_financing/models/__pycache__/contract.cpython-312.pyc
-custom_addons/vehicle_financing/models/__pycache__/master.cpython-312.pyc
-custom_addons/vehicle_financing/models/__pycache__/vehicle.cpython-312.pyc
-log.txt
+__pycache__
