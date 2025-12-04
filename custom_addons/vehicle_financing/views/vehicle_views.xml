@@ -32,6 +32,8 @@
                         <group>
                             <field name="make"/>
                             <field name="model"/>
+                            <field name="variant"/>
+                            <field name="vehicle_type"/>
                             <field name="year"/>
                             <field name="color"/>
                             <field name="internal_asset_code"/>

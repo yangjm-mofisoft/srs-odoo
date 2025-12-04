@@ -10,6 +10,12 @@
                 <widget name="web_ribbon" title="Blacklisted" bg_color="bg-danger" invisible="not leasing_blacklist"/>
             </xpath>
 
+            <!-- Add NRIC after Name or similar suitable place -->
+            <field name="vat" position="after">
+                <field name="nric"/>
+                <field name="date_of_birth"/>
+            </field>
+
             <xpath expr="//notebook" position="inside">
                 <page string="Leasing Info">
                     <group>

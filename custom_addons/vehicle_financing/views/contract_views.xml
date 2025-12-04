@@ -32,8 +32,9 @@
                     <button name="action_generate_schedule" string="Compute Schedule" type="object" 
                         invisible="ac_status != 'draft'" class="btn-secondary"/>
 
-                    <button name="action_pay_dealer" string="Create Payment Voucher" type="object"
-                        class="btn-primary" invisible="ac_status != 'active'"/>
+                    <!-- Disbursement Action -->
+                    <button name="action_disburse" string="Disbursement" type="object"
+                        class="btn-primary" invisible="ac_status != 'active' or disbursement_id"/>
 
                     <button name="action_create_invoices" string="Post Due Invoices" type="object" 
                         invisible="ac_status != 'active'" class="btn-secondary"/>
@@ -190,6 +191,29 @@
                             </group>
                         </page>
 
+                        <!-- Legal Notices Tab -->
+                        <page string="Notices &amp; Legal" name="notices">
+                            <group>
+                                <group string="Collection Actions">
+                                    <field name="date_reminder_sent"/>
+                                    <button name="action_send_reminder" string="Send Reminder Notice" type="object" 
+                                            class="btn-sm btn-secondary" invisible="date_reminder_sent"/>
+                                    
+                                    <field name="date_4th_sched_sent"/>
+                                    <button name="action_send_4th_schedule" string="Issue 4th Schedule" type="object" 
+                                            class="btn-sm btn-warning" invisible="date_4th_sched_sent"/>
+                                </group>
+                                <group string="Repossession">
+                                    <field name="date_repo_order"/>
+                                    <button name="action_issue_repo_order" string="Issue Repo Order" type="object" 
+                                            class="btn-sm btn-danger" invisible="date_repo_order or ac_status == 'repo'"/>
+                                    
+                                    <field name="date_5th_sched_sent"/>
+                                    <button name="action_send_5th_schedule" string="Issue 5th Schedule" type="object" 
+                                            class="btn-sm btn-danger" invisible="not date_repo_order or date_5th_sched_sent"/>
+                                </group>
+                            </group>
+                        </page>
                         <page string="Giro Application">
                             <group>
                                 <field name="collection_bank_id"/>

@@ -8,9 +8,18 @@ class VehicleAsset(models.Model):
     internal_asset_code = fields.Char(string="Internal Asset Code", help="Internal reference/inventory number")
     make = fields.Char(string="Make", required=True)
     model = fields.Char(string="Model", required=True)
+    variant = fields.Char(string="Variant", help="e.g. 2.0 Turbo, AMG Line")
     reg_no = fields.Char(string="Registration No.", required=True)
     engine_no = fields.Char(string="Engine No.")
     chassis_no = fields.Char(string="Chassis No.")
+
+    vehicle_type = fields.Selection([
+        ('passenger', 'Passenger Car'),
+        ('commercial', 'Commercial Vehicle'),
+        ('motorcycle', 'Motorcycle'),
+        ('other', 'Other')
+    ], string="Vehicle Type", default='passenger')
+
     year = fields.Integer(string="Year of Manufacture")
     color = fields.Char(string="Color")
     fuel_type = fields.Selection([
@@ -21,7 +30,7 @@ class VehicleAsset(models.Model):
     ], string="Fuel Type")
     status = fields.Selection([
         ('available', 'Available'),
-        ('leased', 'Leased'),
+        ('financed', 'Financed'),
         ('maintenance', 'Maintenance'),
         ('sold', 'Sold'),
         ('writeoff', 'Written-off')

@@ -180,7 +180,14 @@ class LeasingContract(models.Model):
         domain="[('is_leasing_joint_hirer', '=', True)]",
         help="Parties who share liability and ownership (Joint Hirers)."
     )
-
+    
+    # --- Disbursement & Notices Tracking ---
+    disbursement_id = fields.Many2one('account.payment', string="Disbursement Voucher", readonly=True)
+    
+    date_reminder_sent = fields.Date(string="Reminder Notice Date", readonly=True)
+    date_4th_sched_sent = fields.Date(string="4th Schedule Date", readonly=True)
+    date_repo_order = fields.Date(string="Repossession Date", readonly=True)
+    date_5th_sched_sent = fields.Date(string="5th Schedule Date", readonly=True)
     # --- Logic ---
     
     @api.depends('loan_amount')
@@ -405,25 +412,43 @@ class LeasingContract(models.Model):
         for rec in self:
             rec.ac_status = 'draft'
 
-    def action_pay_dealer(self):
+     # --- Disbursement Logic ---
+    def action_disburse(self):
+        """ 
+        Creates a Payment Voucher to the Dealer.
+        CR Bank / DR Asset Account (Receivable from Hirer)
+        """
         self.ensure_one()
+        if self.disbursement_id:
+            raise UserError("Disbursement already created!")
         if not self.dealer_partner_id:
-            raise UserError("Please select a Dealer Partner Record in the Finance Info tab before paying.")
-        return {
-            'name': 'Pay Dealer',
-            'type': 'ir.actions.act_window',
-            'res_model': 'account.payment',
-            'view_mode': 'form',
-            'context': {
-                'default_payment_type': 'outbound',
-                'default_partner_type': 'supplier',
-                'default_partner_id': self.dealer_partner_id.id,
-                'default_amount': self.loan_amount,
-                'default_ref': f"Payout for {self.agreement_no}",
-                'default_leasing_contract_id': self.id,
-            }
+            raise UserError("Please select a Dealer Partner Record in the Finance Info tab.")
+        
+        # We need to find the destination account (The asset account)
+        # Because standard Odoo payments default to 'Payable', we override the destination account in the lines if possible
+        # Or simpler: Create a Payment and let user confirm, but pre-set values.
+        
+        payment_vals = {
+            'payment_type': 'outbound',
+            'partner_type': 'supplier',
+            'partner_id': self.dealer_partner_id.id,
+            'amount': self.loan_amount,
+            'ref': f"Disbursement for {self.agreement_no}",
+            'leasing_contract_id': self.id,
+            'destination_account_id': self.asset_account_id.id, # Force DR to Asset Account
         }
         
+        payment = self.env['account.payment'].create(payment_vals)
+        self.disbursement_id = payment.id
+        
+        return {
+            'name': 'Disbursement Voucher',
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.payment',
+            'res_id': payment.id,
+            'view_mode': 'form',
+        }
+
     def action_view_payments(self):
         self.ensure_one()
         return {
@@ -522,3 +547,26 @@ class LeasingContract(models.Model):
             if penalty_amount > 0:
                 contract.accrued_penalty += penalty_amount
                 contract.balance_late_charges = contract.accrued_penalty - contract.total_late_paid
+
+    # --- Notices & Repossession Actions ---
+    def action_send_reminder(self):
+        self.ensure_one()
+        self.date_reminder_sent = fields.Date.today()
+        self.message_post(body="Reminder Notice Sent to Hirer.")
+
+    def action_send_4th_schedule(self):
+        self.ensure_one()
+        self.date_4th_sched_sent = fields.Date.today()
+        self.message_post(body="4th Schedule Notice Issued.")
+
+    def action_issue_repo_order(self):
+        self.ensure_one()
+        self.date_repo_order = fields.Date.today()
+        self.ac_status = 'repo'
+        self.vehicle_id.status = 'repo'
+        self.message_post(body="Repossession Order Issued. Contract status updated to Repossessed.")
+
+    def action_send_5th_schedule(self):
+        self.ensure_one()
+        self.date_5th_sched_sent = fields.Date.today()
+        self.message_post(body="5th Schedule Notice Issued (Post-Repossession).")
