@@ -182,7 +182,13 @@ class LeasingContract(models.Model):
     )
     
     # --- Disbursement & Notices Tracking ---
-    disbursement_id = fields.Many2one('account.payment', string="Disbursement Voucher", readonly=True)
+     # NEW: Unearned Interest Account (Liability)
+    unearned_interest_account_id = fields.Many2one('account.account', string="Unearned Interest Account", 
+        help="Credit account for interest at disbursement (Liability/Contra-Asset)", required=True)
+
+    #  Link to Journal Entry instead of Payment
+    #disbursement_id = fields.Many2one('account.payment', string="Disbursement Voucher", readonly=True)
+    disbursement_move_id = fields.Many2one('account.move', string="Disbursement Entry", readonly=True)
     
     date_reminder_sent = fields.Date(string="Reminder Notice Date", readonly=True)
     date_4th_sched_sent = fields.Date(string="4th Schedule Date", readonly=True)
@@ -414,41 +420,20 @@ class LeasingContract(models.Model):
 
      # --- Disbursement Logic ---
     def action_disburse(self):
-        """ 
-        Creates a Payment Voucher to the Dealer.
-        CR Bank / DR Asset Account (Receivable from Hirer)
-        """
         self.ensure_one()
-        if self.disbursement_id:
-            raise UserError("Disbursement already created!")
-        if not self.dealer_partner_id:
-            raise UserError("Please select a Dealer Partner Record in the Finance Info tab.")
-        
-        # We need to find the destination account (The asset account)
-        # Because standard Odoo payments default to 'Payable', we override the destination account in the lines if possible
-        # Or simpler: Create a Payment and let user confirm, but pre-set values.
-        
-        payment_vals = {
-            'payment_type': 'outbound',
-            'partner_type': 'supplier',
-            'partner_id': self.dealer_partner_id.id,
-            'amount': self.loan_amount,
-            'ref': f"Disbursement for {self.agreement_no}",
-            'leasing_contract_id': self.id,
-            'destination_account_id': self.asset_account_id.id, # Force DR to Asset Account
-        }
-        
-        payment = self.env['account.payment'].create(payment_vals)
-        self.disbursement_id = payment.id
+        if self.disbursement_move_id:
+            raise UserError("Disbursement Entry already created!")
         
         return {
-            'name': 'Disbursement Voucher',
+            'name': 'Disbursement',
             'type': 'ir.actions.act_window',
-            'res_model': 'account.payment',
-            'res_id': payment.id,
+            'res_model': 'leasing.disbursement.wizard',
             'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_contract_id': self.id, 'active_id': self.id}
         }
-
+    
+    
     def action_view_payments(self):
         self.ensure_one()
         return {

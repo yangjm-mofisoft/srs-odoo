@@ -13,13 +13,23 @@ class LeasingSettlementWizard(models.TransientModel):
     
     # --- Calculated Values ---
     outstanding_principal = fields.Monetary(string="Future Principal", help="Sum of Principal for lines not yet billed")
-    unearned_interest = fields.Monetary(string="Interest Rebate", help="Interest you are saving the customer (Info only)")
+    unearned_interest = fields.Monetary(string="Interest Rebate (Rule 78)", help="Interest saved by the customer")
     
     arrears_amount = fields.Monetary(string="Arrears (Invoiced)", help="Total unpaid invoices including interest")
     penalty_amount = fields.Monetary(string="Accrued Penalty")
     
-    # --- Fees ---
-    settlement_fee = fields.Monetary(string="Settlement Fee")
+    # --- Settlement Charges (Rules from Image) ---
+    # Rule: 20% of Rebate
+    rebate_fee_rate = fields.Float(string="Fee on Rebate (%)", default=20.0, help="Standard: 20% of Interest Rebate")
+    rebate_fee_amount = fields.Monetary(string="Fee on Rebate", compute='_compute_fees', store=True)
+    
+    # Rule: 1% or 2% of Principal (You can change default)
+    principal_fee_rate = fields.Float(string="Fee on Principal (%)", default=1.0, help="Standard: 1-2% of Outstanding Principal")
+    principal_fee_amount = fields.Monetary(string="Fee on Principal", compute='_compute_fees', store=True)
+    
+    notice_in_lieu_fee = fields.Monetary(string="Notice in Lieu Fee", help="1 month interest if insufficient notice given")
+    
+    manual_fee = fields.Monetary(string="Other Fees")
     
     # --- Totals ---
     total_payable = fields.Monetary(string="Total Settlement Amount", compute='_compute_total')
@@ -33,7 +43,7 @@ class LeasingSettlementWizard(models.TransientModel):
             contract = self.env['leasing.contract'].browse(context_id)
             res.update({
                 'contract_id': contract.id,
-                'penalty_amount': contract.balance_late_charges, # Uses the field we added in the previous step
+                'penalty_amount': contract.balance_late_charges,
             })
             
             # 1. Calculate Arrears (Invoiced but Unpaid)
@@ -44,36 +54,39 @@ class LeasingSettlementWizard(models.TransientModel):
             ])
             res['arrears_amount'] = sum(unpaid_invoices.mapped('amount_residual'))
             
-            # 2. Calculate Future Principal (Unbilled Lines)
-            # We look for lines that DO NOT have an invoice_id yet
+            # 2. Calculate Future Principal & Rebate (Unbilled Lines)
             future_lines = contract.line_ids.filtered(lambda l: not l.invoice_id)
             res['outstanding_principal'] = sum(future_lines.mapped('amount_principal'))
             res['unearned_interest'] = sum(future_lines.mapped('amount_interest'))
             
         return res
 
-    @api.depends('outstanding_principal', 'arrears_amount', 'penalty_amount', 'settlement_fee')
+    @api.depends('outstanding_principal', 'unearned_interest', 'rebate_fee_rate', 'principal_fee_rate')
+    def _compute_fees(self):
+        for rec in self:
+            rec.rebate_fee_amount = rec.unearned_interest * (rec.rebate_fee_rate / 100.0)
+            rec.principal_fee_amount = rec.outstanding_principal * (rec.principal_fee_rate / 100.0)
+
+    @api.depends('outstanding_principal', 'arrears_amount', 'penalty_amount', 'rebate_fee_amount', 'principal_fee_amount', 'notice_in_lieu_fee', 'manual_fee')
     def _compute_total(self):
         for rec in self:
             rec.total_payable = (
                 rec.outstanding_principal + 
                 rec.arrears_amount + 
                 rec.penalty_amount + 
-                rec.settlement_fee
+                rec.rebate_fee_amount + 
+                rec.principal_fee_amount + 
+                rec.notice_in_lieu_fee + 
+                rec.manual_fee
             )
 
     def action_confirm_settlement(self):
-        """
-        1. Create an Invoice for the Future Principal + Settlement Fee.
-        2. (Optional) Create a separate invoice for Penalty if not already billed.
-        3. Close the contract or mark as 'In Settlement'.
-        """
         self.ensure_one()
         contract = self.contract_id
         
         invoice_lines = []
         
-        # Line 1: Outstanding Principal
+        # 1. Outstanding Principal
         if self.outstanding_principal > 0:
             invoice_lines.append((0, 0, {
                 'name': f"Early Settlement - Principal Balance ({contract.agreement_no})",
@@ -82,18 +95,17 @@ class LeasingSettlementWizard(models.TransientModel):
                 'account_id': contract.asset_account_id.id, 
             }))
             
-        # Line 2: Settlement Fee
-        if self.settlement_fee > 0:
-            # You might want a specific income account for fees. 
-            # For now, using the general income account from contract.
+        # 2. Settlement Charges (Grouped)
+        total_fees = self.rebate_fee_amount + self.principal_fee_amount + self.notice_in_lieu_fee + self.manual_fee
+        if total_fees > 0:
             invoice_lines.append((0, 0, {
-                'name': "Early Settlement Fee",
+                'name': "Early Settlement Charges",
                 'quantity': 1,
-                'price_unit': self.settlement_fee,
+                'price_unit': total_fees,
                 'account_id': contract.income_account_id.id, 
             }))
             
-        # Line 3: Penalty (if you want to bill it now)
+        # 3. Penalty
         if self.penalty_amount > 0:
              invoice_lines.append((0, 0, {
                 'name': "Settlement Penalty / Late Charges",
@@ -103,9 +115,9 @@ class LeasingSettlementWizard(models.TransientModel):
             }))
 
         if not invoice_lines:
-            raise UserError("Amount to invoice is zero. Cannot create settlement invoice.")
+            raise UserError("Amount to invoice is zero.")
 
-        # Create the Settlement Invoice
+        # Create Invoice
         invoice = self.env['account.move'].create({
             'move_type': 'out_invoice',
             'partner_id': contract.hirer_id.id,
@@ -117,13 +129,8 @@ class LeasingSettlementWizard(models.TransientModel):
         })
         invoice.action_post()
         
-        # Update Contract Status
-        # We don't close it immediately; we wait for payment.
-        # But we can mark it as 'legal' or a new state 'settlement' if you added one.
-        # For now, we leave it active but post a message.
         contract.message_post(body=f"Early Settlement Invoice {invoice.name} created for {self.total_payable}.")
         
-        # Open the new Invoice
         return {
             'name': 'Settlement Invoice',
             'type': 'ir.actions.act_window',

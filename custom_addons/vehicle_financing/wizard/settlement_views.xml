@@ -20,13 +20,28 @@
                         <field name="outstanding_principal" widget="monetary" decoration-info="1"/>
                         <field name="unearned_interest" widget="monetary" decoration-success="1"/>
                         <div class="text-muted" colspan="2">
-                            * "Unearned Interest" is the amount the customer SAVES by paying early.
+                            * This is the "Interest Rebate" derived from Rule 78.
                         </div>
                     </group>
                     <group string="Charges &amp; Fees">
                         <field name="arrears_amount" widget="monetary" decoration-danger="arrears_amount > 0"/>
                         <field name="penalty_amount" widget="monetary" decoration-danger="penalty_amount > 0"/>
-                        <field name="settlement_fee" widget="monetary"/>
+                        
+                        <!-- Auto-calculated Fees -->
+                        <label for="rebate_fee_amount" string="Charge on Rebate"/>
+                        <div class="o_row">
+                            <field name="rebate_fee_amount" widget="monetary"/>
+                            <span class="text-muted">(@ <field name="rebate_fee_rate" class="oe_inline"/>%)</span>
+                        </div>
+
+                        <label for="principal_fee_amount" string="Charge on Principal"/>
+                        <div class="o_row">
+                            <field name="principal_fee_amount" widget="monetary"/>
+                            <span class="text-muted">(@ <field name="principal_fee_rate" class="oe_inline"/>%)</span>
+                        </div>
+
+                        <field name="notice_in_lieu_fee" widget="monetary"/>
+                        <field name="manual_fee" widget="monetary"/>
                     </group>
                 </group>
 

@@ -15,6 +15,7 @@
         'views/penalty_views.xml',
         'views/contract_views.xml',
         'wizard/settlement_views.xml',
+        'wizard/disbursement_wizard_views.xml',
         'views/account_payment_views.xml',
         'views/menu_views.xml',
         'reports/leasing_reports.xml',
