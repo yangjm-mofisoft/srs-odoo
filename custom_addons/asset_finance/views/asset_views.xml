@@ -22,7 +22,7 @@
                         </group>
                     </group>
                     <group string="Vehicle Details" invisible="asset_type != 'vehicle'">
-                        <field name="vehicle_id" options="{'no_create': True, 'no_open': False}"/>
+                        <field name="vehicle_id" options="{'no_create': False, 'no_open': False}"/>
                     </group>
                 </sheet>
             </form>

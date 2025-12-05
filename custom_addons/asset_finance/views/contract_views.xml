@@ -45,6 +45,69 @@
         <field name="context">{'default_contract_id': active_id}</field>
     </record>
 
+    <record id="view_finance_contract_guarantor_form" model="ir.ui.view">
+        <field name="name">finance.contract.guarantor.form</field>
+        <field name="model">finance.contract.guarantor</field>
+        <field name="arch" type="xml">
+            <form string="Guarantor Details">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="partner_id" class="oe_edit_only"/>
+                        <h1><field name="partner_id" placeholder="Select Guarantor..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Contact Details">
+                            <field name="nric"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                            <label for="street" string="Address"/>
+                            <div class="o_address_format">
+                                <field name="street" placeholder="Street..." class="o_address_street"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                <field name="city" placeholder="City" class="o_address_city"/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                            </div>
+                        </group>
+                        <group string="Compliance &amp; Verification">
+                            <field name="relationship"/>
+                            <separator string="Income Check"/>
+                            <field name="income_verified" widget="boolean_toggle"/>
+                            <field name="verification_date" invisible="not income_verified"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="remarks" placeholder="Enter compliance notes, verification details, etc."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_finance_contract_joint_hirer_form" model="ir.ui.view">
+        <field name="name">finance.contract.joint.hirer.form</field>
+        <field name="model">finance.contract.joint.hirer</field>
+        <field name="arch" type="xml">
+            <form string="Co-Borrower Details">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="partner_id"/></h1>
+                    </div>
+                    <group>
+                        <group string="Contact Info">
+                            <field name="nric"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                        </group>
+                        <group string="Loan Share">
+                            <field name="relationship"/>
+                            <field name="share_percentage"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="view_asset_finance_contract_form" model="ir.ui.view">
         <field name="name">finance.contract.form</field>
         <field name="model">finance.contract</field>
@@ -108,24 +171,22 @@
                                     <field name="hp_ac_no"/>
                                     <field name="ic_no"/>
                                     
-                                    <!-- GUARANTORS: Clickable List -->
-                                    <label for="guarantor_ids" string="Guarantors"/>
-                                    <field name="guarantor_ids" nolabel="1">
-                                        <list>
-                                            <field name="name"/>
-                                            <field name="vat" string="NRIC / ID No."/>
-                                            <field name="phone"/>
-                                            <field name="email"/>
+                                    <separator string="Guarantors &amp; Co-Borrowers" colspan="2"/>
+                                    <field name="guarantor_line_ids" nolabel="1" colspan="2">
+                                        <list string="Guarantors">
+                                            <field name="partner_id"/>
+                                            <field name="relationship"/>
+                                            <field name="income_verified" widget="boolean_toggle"/>
+                                            <field name="verification_date" optional="hide"/>
+                                            <field name="remarks" optional="show"/>
                                         </list>
                                     </field>
 
-                                    <!-- CO-BORROWERS: Clickable List -->
-                                    <label for="joint_hirer_ids" string="Co-Borrowers"/>
-                                    <field name="joint_hirer_ids" nolabel="1">
-                                        <list>
-                                            <field name="name"/>
-                                            <field name="vat" string="NRIC / ID No."/>
-                                            <field name="phone"/>
+                                    <field name="joint_hirer_line_ids" nolabel="1" colspan="2" class="mt-2">
+                                        <list string="Co-Borrowers">
+                                            <field name="partner_id"/>
+                                            <field name="relationship"/>
+                                            <field name="share_percentage"/>
                                         </list>
                                     </field>
 

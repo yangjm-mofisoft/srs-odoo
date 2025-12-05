@@ -8,3 +8,5 @@ access_finance_charge,finance.charge,model_finance_charge,base.group_user,1,1,1,
 access_finance_penalty_rule,finance.penalty.rule,model_finance_penalty_rule,base.group_user,1,1,1,1
 access_finance_disbursement_wizard,finance.disbursement.wizard,model_finance_disbursement_wizard,base.group_user,1,1,1,1
 access_finance_settlement_wizard,finance.settlement.wizard,model_finance_settlement_wizard,base.group_user,1,1,1,1
+access_finance_contract_guarantor,finance.contract.guarantor,model_finance_contract_guarantor,base.group_user,1,1,1,1
+access_finance_contract_joint_hirer,finance.contract.joint.hirer,model_finance_contract_joint_hirer,base.group_user,1,1,1,1

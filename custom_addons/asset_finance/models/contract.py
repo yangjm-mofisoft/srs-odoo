@@ -3,6 +3,64 @@ from dateutil.relativedelta import relativedelta
 from odoo.exceptions import UserError, ValidationError
 import math
 
+class FinanceContractGuarantor(models.Model):
+    _name = 'finance.contract.guarantor'
+    _description = 'Guarantor Line'
+
+    contract_id = fields.Many2one('finance.contract', string="Contract", ondelete='cascade')
+    partner_id = fields.Many2one('res.partner', string="Guarantor Name", required=True, 
+                                 domain="[('is_finance_guarantor', '=', True)]")
+    
+    # --- 1. Pull Details from res.partner ---
+    nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
+    email = fields.Char(related='partner_id.email', readonly=True)
+    phone = fields.Char(related='partner_id.phone', readonly=True)
+    # DELETED: mobile = fields.Char(related='partner_id.mobile', readonly=True) <-- CAUSING ERROR
+    
+    # Address Block
+    street = fields.Char(related='partner_id.street', readonly=True)
+    street2 = fields.Char(related='partner_id.street2', readonly=True)
+    city = fields.Char(related='partner_id.city', readonly=True)
+    zip = fields.Char(related='partner_id.zip', readonly=True)
+    
+    # --- 2. Compliance / Deal Specific Fields ---
+    relationship = fields.Selection([
+        ('spouse', 'Spouse'),
+        ('parent', 'Parent'),
+        ('sibling', 'Sibling'),
+        ('business_partner', 'Business Partner'),
+        ('director', 'Director'),
+        ('other', 'Other')
+    ], string="Relationship", required=True)
+    
+    income_verified = fields.Boolean(string="Income Verified")
+    verification_date = fields.Date(string="Verified Date", default=fields.Date.context_today)
+    remarks = fields.Char(string="Remarks")
+
+
+class FinanceContractJointHirer(models.Model):
+    _name = 'finance.contract.joint.hirer'
+    _description = 'Co-Borrower Line'
+
+    contract_id = fields.Many2one('finance.contract', string="Contract", ondelete='cascade')
+    partner_id = fields.Many2one('res.partner', string="Co-Borrower Name", required=True,
+                                 domain="[('is_finance_joint_hirer', '=', True)]")
+    
+    # --- Pull Details from res.partner ---
+    nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
+    email = fields.Char(related='partner_id.email', readonly=True)
+    phone = fields.Char(related='partner_id.phone', readonly=True)
+    # DELETED: mobile = fields.Char(related='partner_id.mobile', readonly=True) <-- CAUSING ERROR
+    
+    # --- Compliance Fields ---
+    share_percentage = fields.Float(string="Liability Share (%)", default=100.0)
+    relationship = fields.Selection([
+        ('spouse', 'Spouse'),
+        ('business', 'Business Partner'),
+        ('other', 'Other')
+    ], string="Relationship")
+
+
 class FinanceContract(models.Model):
     _name = 'finance.contract'
     _description = 'Financial Contract'
@@ -159,26 +217,11 @@ class FinanceContract(models.Model):
     accrued_penalty = fields.Monetary(string="Accrued Penalty", currency_field='currency_id', default=0.0)
 
     # 1. GUARANTORS (Multiple)
-    guarantor_ids = fields.Many2many(
-        'res.partner',
-        relation='finance_contract_guarantor_rel',  # <--- Specific Table Name
-        column1='contract_id',
-        column2='partner_id',
-        string="Guarantors",
-        domain="[('is_finance_guarantor', '=', True)]",
-        help="Parties who guarantee the loan if the Hirer defaults."
-    )
-
+    guarantor_line_ids = fields.One2many('finance.contract.guarantor', 'contract_id', string="Guarantors")
+    
     # 2. CO-BORROWERS / JOINT HIRERS (Multiple)
-    joint_hirer_ids = fields.Many2many(
-        'res.partner',
-        relation='finance_contract_joint_hirer_rel', # <--- Specific Table Name
-        column1='contract_id',
-        column2='partner_id',
-        string="Co-Borrowers",
-        domain="[('is_finance_joint_hirer', '=', True)]",
-        help="Parties who share liability and ownership (Joint Hirers)."
-    )
+    joint_hirer_line_ids = fields.One2many('finance.contract.joint.hirer', 'contract_id', string="Co-Borrowers")
+
     
     # --- Disbursement & Notices Tracking ---
      # NEW: Unearned Interest Account (Liability)
