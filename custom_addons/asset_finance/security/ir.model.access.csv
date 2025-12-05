@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_finance_contract,finance.contract,model_finance_contract,base.group_user,1,1,1,1
+access_finance_contract_line,finance.contract.line,model_finance_contract_line,base.group_user,1,1,1,1
+access_finance_asset,finance.asset,model_finance_asset,base.group_user,1,1,1,1
+access_finance_product,finance.product,model_finance_product,base.group_user,1,1,1,1
+access_finance_term,finance.term,model_finance_term,base.group_user,1,1,1,1
+access_finance_charge,finance.charge,model_finance_charge,base.group_user,1,1,1,1
+access_finance_penalty_rule,finance.penalty.rule,model_finance_penalty_rule,base.group_user,1,1,1,1
+access_finance_disbursement_wizard,finance.disbursement.wizard,model_finance_disbursement_wizard,base.group_user,1,1,1,1
+access_finance_settlement_wizard,finance.settlement.wizard,model_finance_settlement_wizard,base.group_user,1,1,1,1

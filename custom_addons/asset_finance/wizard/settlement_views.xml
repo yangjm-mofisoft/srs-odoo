@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_asset_finance_settlement_wizard_form" model="ir.ui.view">
+        <field name="name">finance.settlement.wizard.form</field>
+        <field name="model">finance.settlement.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Early Settlement">
+                <group>
+                    <group string="Settlement Details">
+                        <field name="contract_id"/>
+                        <field name="settlement_date"/>
+                    </group>
+                    <group string="Summary">
+                        <field name="total_payable" decoration-bf="1" style="font-size: 1.5em;"/>
+                    </group>
+                </group>
+                
+                <group>
+                    <group string="Balance Breakdown">
+                        <field name="outstanding_principal" widget="monetary" decoration-info="1"/>
+                        <field name="unearned_interest" widget="monetary" decoration-success="1"/>
+                        <div class="text-muted" colspan="2">
+                            * This is the "Interest Rebate" derived from Rule 78.
+                        </div>
+                    </group>
+                    <group string="Charges &amp; Fees">
+                        <field name="arrears_amount" widget="monetary" decoration-danger="arrears_amount > 0"/>
+                        <field name="penalty_amount" widget="monetary" decoration-danger="penalty_amount > 0"/>
+                        
+                        <!-- Auto-calculated Fees -->
+                        <label for="rebate_fee_amount" string="Charge on Rebate"/>
+                        <div class="o_row">
+                            <field name="rebate_fee_amount" widget="monetary"/>
+                            <span class="text-muted">(@ <field name="rebate_fee_rate" class="oe_inline"/>%)</span>
+                        </div>
+
+                        <label for="principal_fee_amount" string="Charge on Principal"/>
+                        <div class="o_row">
+                            <field name="principal_fee_amount" widget="monetary"/>
+                            <span class="text-muted">(@ <field name="principal_fee_rate" class="oe_inline"/>%)</span>
+                        </div>
+
+                        <field name="notice_in_lieu_fee" widget="monetary"/>
+                        <field name="manual_fee" widget="monetary"/>
+                    </group>
+                </group>
+
+                <footer>
+                    <button name="action_confirm_settlement" string="Confirm &amp; Create Invoice" 
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_finance_settlement_wizard" model="ir.actions.act_window">
+        <field name="name">Early Settlement</field>
+        <field name="res_model">finance.settlement.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

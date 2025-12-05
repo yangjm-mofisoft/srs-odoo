@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_asset_finance_penalty_rule_tree" model="ir.ui.view">
+        <field name="name">finance.penalty.rule.tree</field>
+        <field name="model">finance.penalty.rule</field>
+        <field name="arch" type="xml">
+            <list string="Penalty Rules">
+                <field name="name"/>
+                <field name="method"/>
+                <field name="rate" widget="percentage"/>
+                <field name="grace_period_days"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_asset_finance_penalty_rule_form" model="ir.ui.view">
+        <field name="name">finance.penalty.rule.form</field>
+        <field name="model">finance.penalty.rule</field>
+        <field name="arch" type="xml">
+            <form string="Penalty Rule">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Standard 8% Late Fee"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="method"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="grace_period_days"/>
+                        </group>
+                    </group>
+                    <group string="Calculation Details">
+                        <field name="rate" invisible="method != 'daily_percent'"/>
+                        
+                        <field name="fixed_amount" invisible="method == 'daily_percent'"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_asset_finance_penalty_rule" model="ir.actions.act_window">
+        <field name="name">Penalty Rules</field>
+        <field name="res_model">finance.penalty.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Create a new Penalty Rule
+          </p><p>
+            Define how late interest or fees are calculated for overdue contracts.
+          </p>
+        </field>
+    </record>
+
+</odoo>

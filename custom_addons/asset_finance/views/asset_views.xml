@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_finance_asset_form" model="ir.ui.view">
+        <field name="name">finance.asset.form</field>
+        <field name="model">finance.asset</field>
+        <field name="arch" type="xml">
+            <form string="Asset">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Toyota Camry 2023"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="asset_type"/>
+                            <field name="internal_ref"/>
+                            <field name="serial_no"/>
+                            <field name="status"/>
+                        </group>
+                        <group>
+                            <field name="description" placeholder="Additional details about the asset..."/>
+                        </group>
+                    </group>
+                    <group string="Vehicle Details" invisible="asset_type != 'vehicle'">
+                        <field name="vehicle_id" options="{'no_create': True, 'no_open': False}"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_finance_asset_list" model="ir.ui.view">
+        <field name="name">finance.asset.list</field>
+        <field name="model">finance.asset</field>
+        <field name="arch" type="xml">
+            <list string="Assets">
+                <field name="display_name"/>
+                <field name="asset_type"/>
+                <field name="serial_no"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_finance_asset" model="ir.actions.act_window">
+        <field name="name">Assets</field>
+        <field name="res_model">finance.asset</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

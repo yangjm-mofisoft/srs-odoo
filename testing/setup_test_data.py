@@ -1,32 +1,30 @@
 # -------------------------------------------------------------------------
-# UPDATED SCRIPT TO GENERATE TEST DATA FOR VEHICLE FINANCING (v3)
+# UPDATED SCRIPT TO GENERATE TEST DATA FOR VEHICLE FINANCING (v5)
 # Run this inside Odoo Shell
 # -------------------------------------------------------------------------
 import logging
 from datetime import date
 
 def run_setup(env):
-    print("\n--- STARTING DATA SETUP (v3) ---")
+    print("\n--- STARTING DATA SETUP (v5 - With Guarantors) ---")
     
     # 1. FORCE SUPERUSER & COMPANY CONTEXT
-    # This prevents access right issues or missing company_id errors
     user_id = env.ref('base.user_admin').id
     company = env['res.company'].search([], limit=1)
+    if not company:
+        company = env['res.company'].create({'name': 'My Company', 'currency_id': env.ref('base.USD').id})
     
-    # Switch env to Admin + Correct Company
     env = env(user=user_id, context={'allowed_company_ids': [company.id]})
     
     print(f"Using Company: {company.name} (ID: {company.id})")
 
     # 2. SETUP CHART OF ACCOUNTS
-    # ----------------------------------------
     def get_or_create_account(code, name, type_key):
-        # Use sudo() to ensure we can read/write regardless of rules
         Account = env['account.account'].sudo()
-        
-        # Search for existing account
-        # We search using integer ID for company to be safe
-        domain = [('code', '=', code), ('company_id', '=', company.id)]
+        domain = [('code', '=', code)]
+        if 'company_id' in Account._fields:
+             domain.append(('company_id', '=', company.id))
+
         acc = Account.search(domain, limit=1)
         
         if not acc:
@@ -35,41 +33,31 @@ def run_setup(env):
                 'name': name,
                 'code': code,
                 'account_type': type_key,
-                'company_id': company.id,
                 'reconcile': type_key in ['asset_receivable', 'liability_payable'],
             }
+            if 'company_id' in Account._fields:
+                vals['company_id'] = company.id
             acc = Account.create(vals)
         else:
             print(f"Found Account: {name} ({code})")
-            
         return acc
 
-    # Assets
+    # Accounts
     asset_account = get_or_create_account('2002', 'HP Debtors (Principal)', 'asset_receivable')
-    
-    # Liabilities
     unearned_account = get_or_create_account('4002', 'Unearned Interest (Liability)', 'liability_current')
-    
-    # Income
     income_account = get_or_create_account('5001', 'HP Interest Income', 'income')
-    fee_account = get_or_create_account('5002', 'Processing Fee Income', 'income')
-    settlement_income_account = get_or_create_account('5004', 'Early Settlement Income', 'income_other')
-
-    # Get Sales Journal
+    
+    # Journal
     journal = env['account.journal'].sudo().search([('type', '=', 'sale'), ('company_id', '=', company.id)], limit=1)
     if not journal:
         journal = env['account.journal'].sudo().create({
-            'name': 'Customer Invoices',
-            'code': 'INV',
-            'type': 'sale',
-            'company_id': company.id
+            'name': 'Customer Invoices', 'code': 'INV', 'type': 'sale', 'company_id': company.id
         })
-    print(f"Journal: {journal.name}")
 
     # 3. SETUP MASTER DATA
-    # ----------------------------------------
     Partner = env['res.partner'].sudo()
     
+    # Dealer
     dealer_partner = Partner.search([('name', '=', 'Super Cars Dealership')], limit=1)
     if not dealer_partner:
         dealer_partner = Partner.create({'name': 'Super Cars Dealership', 'is_company': True})
@@ -79,6 +67,7 @@ def run_setup(env):
     if not dealer:
         dealer = Dealer.create({'name': 'Super Cars', 'code': 'D001'})
     
+    # Hirer
     hirer = Partner.search([('nric', '=', 'S1234567A')], limit=1)
     if not hirer:
         hirer = Partner.create({
@@ -89,54 +78,49 @@ def run_setup(env):
             'phone': '+65 9123 4567',
         })
 
+    # --- NEW: GUARANTOR SETUP ---
+    guarantor = Partner.search([('nric', '=', 'G9876543Z')], limit=1)
+    if not guarantor:
+        guarantor = Partner.create({
+            'name': 'Gary Guarantor',
+            'email': 'gary.g@test.com',
+            'nric': 'G9876543Z',
+            'street': '99 Guarantor Lane',
+            'phone': '+65 8111 2222',
+            'is_leasing_guarantor': True,  # Mark as guarantor
+        })
+    print(f"Guarantor: {guarantor.name}")
+
+    # Vehicle
     Vehicle = env['leasing.vehicle'].sudo()
     vehicle = Vehicle.search([('reg_no', '=', 'SGA 8888 Z')], limit=1)
     if not vehicle:
         vehicle = Vehicle.create({
-            'reg_no': 'SGA 8888 Z',
-            'make': 'Toyota',
-            'model': 'Camry',
-            'variant': '2.5 Hybrid',
-            'year': 2024,
-            'fuel_type': 'hybrid',
-            'vehicle_type': 'passenger',
-            'color': 'Pearl White',
-            'engine_no': 'ENG-TEST-001',
-            'chassis_no': 'CHS-TEST-001',
-            'status': 'available',
+            'reg_no': 'SGA 8888 Z', 'make': 'Toyota', 'model': 'Camry', 'variant': '2.5 Hybrid',
+            'year': 2024, 'fuel_type': 'hybrid', 'vehicle_type': 'passenger', 'status': 'available',
         })
 
-    # 4. SETUP PENALTY RULE
-    # ----------------------------------------
+    # 4. SETUP RULES & PRODUCT
     Penalty = env['leasing.penalty.rule'].sudo()
     penalty_rule = Penalty.search([('name', '=', 'Standard Late Interest 8%')], limit=1)
     if not penalty_rule:
-        penalty_rule = Penalty.create({
-            'name': 'Standard Late Interest 8%',
-            'method': 'daily_percent',
-            'rate': 8.0,
-            'grace_period_days': 3,
-        })
+        penalty_rule = Penalty.create({'name': 'Standard Late Interest 8%', 'method': 'daily_percent', 'rate': 8.0, 'grace_period_days': 3})
 
-    # 5. SETUP PRODUCT
-    # ----------------------------------------
     Product = env['leasing.product'].sudo()
     product = Product.search([('name', '=', 'Standard HP 2025')], limit=1)
     if not product:
         product = Product.create({
-            'name': 'Standard HP 2025',
-            'product_type': 'hp',
-            'default_int_rate': 5.0,
-            'default_penalty_rule_id': penalty_rule.id,
-            'active': True,
+            'name': 'Standard HP 2025', 'product_type': 'hp', 'default_int_rate': 5.0,
+            'default_penalty_rule_id': penalty_rule.id, 'active': True
         })
 
-    # 6. CREATE CONTRACT
-    # ----------------------------------------
+    # 5. CREATE CONTRACT (With Guarantor)
     Contract = env['leasing.contract'].sudo()
     contract = Contract.search([('hirer_id', '=', hirer.id), ('vehicle_id', '=', vehicle.id)], limit=1)
+    
     if not contract:
-        contract = Contract.create({
+        # Using create([{}]) format for safety
+        contract = Contract.create([{
             'product_id': product.id,
             'hirer_id': hirer.id,
             'vehicle_id': vehicle.id,
@@ -158,10 +142,17 @@ def run_setup(env):
             'asset_account_id': asset_account.id,
             'income_account_id': income_account.id,
             'unearned_interest_account_id': unearned_account.id,
-        })
+            
+            # --- ADDING GUARANTOR HERE ---
+            'guarantor_ids': [(6, 0, [guarantor.id])]
+        }])
         print(f"\nSUCCESS! Contract Created: {contract.agreement_no}")
     else:
         print(f"\nContract already exists: {contract.agreement_no}")
+        # Update existing contract to include guarantor if missing
+        if guarantor.id not in contract.guarantor_ids.ids:
+            contract.write({'guarantor_ids': [(4, guarantor.id)]})
+            print(f"Added Guarantor {guarantor.name} to existing contract.")
 
     print("------------------------------------------")
     env.cr.commit()

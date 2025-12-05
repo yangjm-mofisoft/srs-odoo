@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Pre-populate common financing terms from 1 to 120 months -->
+    <function model="finance.term" name="create" eval="[[{'months': m} for m in range(1, 121)]]"/>
+</odoo>
