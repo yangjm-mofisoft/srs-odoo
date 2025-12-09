@@ -16,3 +16,16 @@ class ResPartner(models.Model):
     # --- Risk Management ---
     finance_blacklist = fields.Boolean(string="Blacklisted (Finance)")
     finance_blacklist_reason = fields.Char(string="Blacklist Reason")
+
+    # Odoo has a standard 'type' field (Invoice, Delivery, Other). 
+    # We add a specific classification for your Finance needs.
+    address_category = fields.Selection([
+        ('residential', 'Residential'),
+        ('work', 'Work / Office'),
+        ('registered', 'Registered Address'),
+        ('mailing', 'Mailing Address'),
+        ('previous', 'Previous Address')
+    ], string="Address Category")
+
+    # Multiple Contact Numbers ---
+    phone_ids = fields.One2many('res.partner.phone', 'partner_id', string="Contact Numbers")

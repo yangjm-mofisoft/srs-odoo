@@ -6,3 +6,4 @@ from . import contract_line
 from . import account_payment
 from . import product
 from . import res_partner
+from . import res_partner_phone

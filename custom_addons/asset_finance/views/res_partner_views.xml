@@ -10,13 +10,27 @@
                 <widget name="web_ribbon" title="Blacklisted" bg_color="bg-danger" invisible="not finance_blacklist"/>
             </xpath>
 
-            <!-- Add NRIC after Name or similar suitable place -->
             <field name="vat" position="after">
                 <field name="nric"/>
                 <field name="date_of_birth"/>
             </field>
 
+            <xpath expr="//field[@name='child_ids']/form//field[@name='type']" position="after">
+                <field name="address_category" placeholder="e.g. Residential, Work..."/>
+            </xpath>
+
             <xpath expr="//notebook" position="inside">
+                <page string="Contact Numbers" name="contact_numbers">
+                    <field name="phone_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="contact_type"/>
+                            <field name="name" string="Number"/>
+                            <field name="address_id" options="{'no_create': True}"/>
+                            <field name="is_verified" widget="boolean_toggle"/>
+                        </list>
+                    </field>
+                </page>
+
                 <page string="Finance Info">
                     <group>
                         <group string="Roles">
