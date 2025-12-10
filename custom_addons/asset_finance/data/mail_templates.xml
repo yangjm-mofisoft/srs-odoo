@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Payment Reminder Template (7 days before due) -->
+        <record id="email_template_payment_reminder" model="mail.template">
+            <field name="name">Finance: Payment Reminder</field>
+            <field name="model_id" ref="model_finance_contract"/>
+            <field name="subject">Payment Reminder - ${object.agreement_no}</field>
+            <field name="email_from">${(object.company_id.email or user.email_formatted) | safe}</field>
+            <field name="email_to">${object.hirer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+                    <h2 style="color: #007bff;">Payment Reminder</h2>
+
+                    <p>Dear ${object.hirer_id.name},</p>
+
+                    <p>This is a friendly reminder that your installment payment is due soon.</p>
+
+                    <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Agreement No:</strong> ${object.agreement_no}</p>
+                        <p style="margin: 5px 0;"><strong>Asset:</strong> ${object.asset_reg_no} - ${object.asset_make} ${object.asset_model}</p>
+                        <p style="margin: 5px 0;"><strong>Next Payment Date:</strong> ${object.next_inst_date}</p>
+                        <p style="margin: 5px 0;"><strong>Payment Amount:</strong> ${format_amount(object.monthly_inst, object.currency_id)}</p>
+                    </div>
+
+                    <p>Please ensure payment is made on or before the due date to avoid late charges.</p>
+
+                    <p style="color: #6c757d; font-size: 12px; margin-top: 30px;">
+                        If you have already made this payment, please disregard this notice.
+                    </p>
+
+                    <p>Best regards,<br/>
+                    ${object.company_id.name}<br/>
+                    ${object.company_id.phone or ''}</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Overdue Notice Template -->
+        <record id="email_template_overdue_notice" model="mail.template">
+            <field name="name">Finance: Overdue Notice</field>
+            <field name="model_id" ref="model_finance_contract"/>
+            <field name="subject">OVERDUE PAYMENT NOTICE - ${object.agreement_no}</field>
+            <field name="email_from">${(object.company_id.email or user.email_formatted) | safe}</field>
+            <field name="email_to">${object.hirer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+                    <h2 style="color: #dc3545;">OVERDUE PAYMENT NOTICE</h2>
+
+                    <p>Dear ${object.hirer_id.name},</p>
+
+                    <p><strong style="color: #dc3545;">Your account is now overdue.</strong></p>
+
+                    <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Agreement No:</strong> ${object.agreement_no}</p>
+                        <p style="margin: 5px 0;"><strong>Asset:</strong> ${object.asset_reg_no} - ${object.asset_make} ${object.asset_model}</p>
+                        <p style="margin: 5px 0;"><strong>Days Overdue:</strong> <span style="color: #dc3545; font-weight: bold;">${object.total_overdue_days} days</span></p>
+                        <p style="margin: 5px 0;"><strong>Outstanding Balance:</strong> ${format_amount(object.balance_installment, object.currency_id)}</p>
+                        <p style="margin: 5px 0;"><strong>Penalty Charges:</strong> ${format_amount(object.balance_late_charges, object.currency_id)}</p>
+                        <p style="margin: 5px 0;"><strong>Total Amount Due:</strong> <strong style="color: #dc3545;">${format_amount(object.total_payable, object.currency_id)}</strong></p>
+                    </div>
+
+                    <p><strong>Please make immediate payment to avoid:</strong></p>
+                    <ul>
+                        <li>Additional penalty charges</li>
+                        <li>Credit rating impact</li>
+                        <li>Legal action</li>
+                        <li>Asset repossession</li>
+                    </ul>
+
+                    <p>For payment arrangements, please contact us immediately.</p>
+
+                    <p>Regards,<br/>
+                    Collections Department<br/>
+                    ${object.company_id.name}<br/>
+                    ${object.company_id.phone or ''}</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- 4th Schedule Notice Template -->
+        <record id="email_template_4th_schedule" model="mail.template">
+            <field name="name">Finance: 4th Schedule Notice</field>
+            <field name="model_id" ref="model_finance_contract"/>
+            <field name="subject">4TH SCHEDULE NOTICE - ${object.agreement_no}</field>
+            <field name="email_from">${(object.company_id.email or user.email_formatted) | safe}</field>
+            <field name="email_to">${object.hirer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+                    <h2 style="color: #dc3545;">4TH SCHEDULE NOTICE</h2>
+
+                    <p>Dear ${object.hirer_id.name},</p>
+
+                    <p><strong>RE: NOTICE UNDER SECTION 4 OF THE HIRE PURCHASE ACT</strong></p>
+
+                    <div style="background-color: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Agreement No:</strong> ${object.agreement_no}</p>
+                        <p style="margin: 5px 0;"><strong>Asset:</strong> ${object.asset_reg_no} - ${object.asset_make} ${object.asset_model}</p>
+                        <p style="margin: 5px 0;"><strong>Total Amount Due:</strong> <strong style="color: #dc3545;">${format_amount(object.total_payable, object.currency_id)}</strong></p>
+                        <p style="margin: 5px 0;"><strong>Days Overdue:</strong> ${object.total_overdue_days} days</p>
+                    </div>
+
+                    <p>TAKE NOTICE that unless the arrears and charges specified above are paid within <strong>21 DAYS</strong> from the date of this notice, we shall be entitled to:</p>
+
+                    <ol>
+                        <li>Terminate the Hire Purchase Agreement</li>
+                        <li>Repossess the asset</li>
+                        <li>Claim for damages and losses</li>
+                        <li>Report to credit bureaus</li>
+                    </ol>
+
+                    <p style="color: #dc3545; font-weight: bold;">THIS IS A STATUTORY NOTICE UNDER THE HIRE PURCHASE ACT.</p>
+
+                    <p>For immediate settlement or payment arrangements, contact us within 21 days.</p>
+
+                    <p>Yours faithfully,<br/>
+                    Legal Department<br/>
+                    ${object.company_id.name}<br/>
+                    ${object.company_id.phone or ''}</p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Settlement Quotation Template -->
+        <record id="email_template_settlement_quotation" model="mail.template">
+            <field name="name">Finance: Settlement Quotation</field>
+            <field name="model_id" ref="model_finance_contract"/>
+            <field name="subject">Early Settlement Quotation - ${object.agreement_no}</field>
+            <field name="email_from">${(object.company_id.email or user.email_formatted) | safe}</field>
+            <field name="email_to">${object.hirer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+                    <h2 style="color: #28a745;">Early Settlement Quotation</h2>
+
+                    <p>Dear ${object.hirer_id.name},</p>
+
+                    <p>Thank you for your interest in early settlement of your finance agreement.</p>
+
+                    <div style="background-color: #d1ecf1; padding: 15px; border-left: 4px solid #17a2b8; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Agreement No:</strong> ${object.agreement_no}</p>
+                        <p style="margin: 5px 0;"><strong>Asset:</strong> ${object.asset_reg_no} - ${object.asset_make} ${object.asset_model}</p>
+                        <p style="margin: 5px 0;"><strong>Quotation Date:</strong> ${format_date(today)}</p>
+                        <p style="margin: 5px 0;"><strong>Valid Until:</strong> ${format_date(today + relativedelta(days=7))}</p>
+                    </div>
+
+                    <h3>Settlement Breakdown:</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <tr style="background-color: #f8f9fa;">
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Outstanding Principal</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right;">${format_amount(object.os_balance, object.currency_id)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dee2e6;">Penalty Charges</td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right;">${format_amount(object.balance_late_charges, object.currency_id)}</td>
+                        </tr>
+                        <tr style="background-color: #d4edda;">
+                            <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Total Settlement Amount</strong></td>
+                            <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right;"><strong>${format_amount(object.os_balance + object.balance_late_charges, object.currency_id)}</strong></td>
+                        </tr>
+                    </table>
+
+                    <p><strong>Note:</strong> This quotation is valid for 7 days. Settlement charges and interest rebates will be calculated upon payment.</p>
+
+                    <p>To proceed with settlement, please contact us to arrange payment.</p>
+
+                    <p>Best regards,<br/>
+                    ${object.company_id.name}<br/>
+                    ${object.company_id.phone or ''}</p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>

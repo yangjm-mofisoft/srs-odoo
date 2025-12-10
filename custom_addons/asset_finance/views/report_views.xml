@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_finance_report_aging_list" model="ir.ui.view">
+        <field name="name">finance.report.aging.list</field>
+        <field name="model">finance.report.aging</field>
+        <field name="arch" type="xml">
+            <list string="Aging Analysis" create="false" edit="false" delete="false">
+                <field name="aging_bucket" string="Aging"/>
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="asset_reg_no"/>
+                <field name="product_id"/>
+                <field name="total_overdue_days"/>
+                <field name="balance_hire" sum="Total Balance"/>
+                <field name="balance_late_charges" sum="Total Penalties"/>
+                <field name="total_payable" sum="Total Payable"/>
+                <field name="ac_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_finance_report_aging_pivot" model="ir.ui.view">
+        <field name="name">finance.report.aging.pivot</field>
+        <field name="model">finance.report.aging</field>
+        <field name="arch" type="xml">
+            <pivot string="Aging Analysis" disable_linking="True">
+                <field name="aging_bucket" type="row"/>
+                <field name="product_id" type="col"/>
+                <field name="balance_hire" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_finance_report_aging_graph" model="ir.ui.view">
+        <field name="name">finance.report.aging.graph</field>
+        <field name="model">finance.report.aging</field>
+        <field name="arch" type="xml">
+            <graph string="Aging Analysis" type="bar">
+                <field name="aging_bucket"/>
+                <field name="balance_hire" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_finance_report_aging_search" model="ir.ui.view">
+        <field name="name">finance.report.aging.search</field>
+        <field name="model">finance.report.aging</field>
+        <field name="arch" type="xml">
+            <search string="Aging Analysis">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="aging_bucket"/>
+                <separator/>
+                <filter string="Overdue" name="filter_overdue" domain="[('total_overdue_days', '>', 0)]"/>
+                
+                <group>
+                    <filter string="Aging Bucket" name="group_bucket" context="{'group_by':'aging_bucket'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by':'product_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_finance_report_aging" model="ir.actions.act_window">
+        <field name="name">Aging Analysis</field>
+        <field name="res_model">finance.report.aging</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'search_default_group_bucket': 1}</field>
+    </record>
+
+
+    <record id="view_finance_report_collection_list" model="ir.ui.view">
+        <field name="name">finance.report.collection.list</field>
+        <field name="model">finance.report.collection</field>
+        <field name="arch" type="xml">
+            <list string="Collection Report" create="false" edit="false" delete="false" decoration-danger="late_status=='legal'" decoration-warning="late_status=='attention'">
+                <field name="priority_score" widget="progressbar" string="Priority"/>
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="hirer_phone"/>
+                <field name="total_overdue_days"/>
+                <field name="balance_hire" sum="Total Outstanding"/>
+                <field name="balance_late_charges"/>
+                <field name="total_payable" sum="Total Due"/>
+                <field name="late_status" widget="badge" decoration-danger="late_status == 'legal'"/>
+                <field name="last_payment_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_finance_report_collection_search" model="ir.ui.view">
+        <field name="name">finance.report.collection.search</field>
+        <field name="model">finance.report.collection</field>
+        <field name="arch" type="xml">
+            <search string="Search Collections">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <separator/>
+                <filter string="High Priority" name="filter_high_priority" domain="[('priority_score', '>', 100)]"/>
+                
+                <group>
+                    <filter string="Collection Status" name="group_status" context="{'group_by': 'late_status'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_finance_report_collection" model="ir.actions.act_window">
+        <field name="name">Collection Report</field>
+        <field name="res_model">finance.report.collection</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="domain">[('total_overdue_days', '>', 0)]</field>
+        <field name="context">{'search_default_group_status': 1}</field>
+    </record>
+
+
+    <record id="view_finance_report_disbursement_list" model="ir.ui.view">
+        <field name="name">finance.report.disbursement.list</field>
+        <field name="model">finance.report.disbursement</field>
+        <field name="arch" type="xml">
+            <list string="Disbursement Register" create="false" edit="false" delete="false">
+                <field name="disbursement_date"/>
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="supplier_id"/>
+                <field name="product_type"/>
+                <field name="loan_amount" sum="Total Loan"/>
+                <field name="admin_fee" sum="Total Fees"/>
+                <field name="commission" sum="Total Comm"/>
+                <field name="disbursement_move_id" widget="many2one"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_finance_report_disbursement_search" model="ir.ui.view">
+        <field name="name">finance.report.disbursement.search</field>
+        <field name="model">finance.report.disbursement</field>
+        <field name="arch" type="xml">
+            <search string="Disbursements">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="supplier_id"/>
+                <field name="disbursement_date"/>
+                <separator/>
+                <filter string="This Month" name="this_month" domain="[('disbursement_date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                
+                <group>
+                    <filter string="Month" name="group_month" context="{'group_by':'month'}"/>
+                    <filter string="Product Type" name="group_type" context="{'group_by':'product_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_finance_report_disbursement" model="ir.actions.act_window">
+        <field name="name">Disbursement Register</field>
+        <field name="res_model">finance.report.disbursement</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+
+
+    <record id="view_finance_report_interest_list" model="ir.ui.view">
+        <field name="name">finance.report.interest.list</field>
+        <field name="model">finance.report.interest</field>
+        <field name="arch" type="xml">
+            <list string="Interest Income" create="false" edit="false" delete="false">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="loan_amount" sum="Total Loan"/>
+                <field name="term_charges" sum="Total Interest"/>
+                <field name="earned_interest" sum="Earned"/>
+                <field name="unearned_interest" sum="Unearned"/>
+                <field name="recognized_mtd" sum="MTD Income"/>
+                <field name="progress" widget="progressbar"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_finance_report_interest_search" model="ir.ui.view">
+        <field name="name">finance.report.interest.search</field>
+        <field name="model">finance.report.interest</field>
+        <field name="arch" type="xml">
+            <search string="Search Interest">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                
+                <group>
+                    <filter string="Product Type" name="group_type" context="{'group_by': 'product_type'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'ac_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_finance_report_interest" model="ir.actions.act_window">
+        <field name="name">Interest Income Analysis</field>
+        <field name="res_model">finance.report.interest</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+
+
+    <record id="view_finance_report_portfolio_pivot" model="ir.ui.view">
+        <field name="name">finance.report.portfolio.pivot</field>
+        <field name="model">finance.report.portfolio</field>
+        <field name="arch" type="xml">
+            <pivot string="Portfolio Summary" disable_linking="True">
+                <field name="product_type" type="row"/>
+                <field name="ac_status" type="col"/>
+                <field name="contract_count" type="measure"/>
+                <field name="total_loan_amount" type="measure"/>
+                <field name="total_outstanding" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_finance_report_portfolio_search" model="ir.ui.view">
+        <field name="name">finance.report.portfolio.search</field>
+        <field name="model">finance.report.portfolio</field>
+        <field name="arch" type="xml">
+            <search string="Search Portfolio">
+                <filter string="Active" name="filter_active" domain="[('ac_status', '=', 'active')]"/>
+                
+                <group>
+                    <filter string="Product Type" name="group_type" context="{'group_by': 'product_type'}"/>
+                    <filter string="Asset Type" name="group_asset" context="{'group_by': 'asset_type'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'ac_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_finance_report_portfolio" model="ir.actions.act_window">
+        <field name="name">Portfolio Summary</field>
+        <field name="res_model">finance.report.portfolio</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="context">{'search_default_filter_active': 1, 'search_default_group_type': 1}</field>
+    </record>
+
+
+    <menuitem id="menu_finance_reports" name="Reports" parent="menu_finance_root" sequence="40"/>
+
+    <menuitem id="menu_finance_report_aging" name="Aging Analysis" parent="menu_finance_reports" action="action_finance_report_aging" sequence="1"/>
+    <menuitem id="menu_finance_report_collection" name="Collection Report" parent="menu_finance_reports" action="action_finance_report_collection" sequence="2"/>
+    <menuitem id="menu_finance_report_disbursement" name="Disbursement Register" parent="menu_finance_reports" action="action_finance_report_disbursement" sequence="3"/>
+    <menuitem id="menu_finance_report_interest" name="Interest Income" parent="menu_finance_reports" action="action_finance_report_interest" sequence="4"/>
+    <menuitem id="menu_finance_report_portfolio" name="Portfolio Summary" parent="menu_finance_reports" action="action_finance_report_portfolio" sequence="5"/>
+
+</odoo>

@@ -6,11 +6,15 @@
     'author': 'Mofisoft PTE. LTD.',
     'depends': ['base', 'account', 'sale', 'purchase', 'fleet'],
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'data/cron.xml',
         'data/finance_term_data.xml',
         'data/account_chart_data.xml',
+        'data/mail_templates.xml',
+        'views/res_config_settings_views.xml',
+        'views/dashboard_views.xml',
         'views/asset_views.xml',
         'views/asset_sg_views.xml',
         # 'views/res_partner_contact_views.xml', # Security for new model
@@ -21,6 +25,7 @@
         'wizard/settlement_views.xml',
         'wizard/disbursement_wizard_views.xml',
         'views/account_payment_views.xml',
+        'views/report_views.xml',
         'views/menu_views.xml',
         'reports/finance_reports.xml',
         'reports/finance_contract_template.xml',

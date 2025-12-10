@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_finance_dashboard_kanban" model="ir.ui.view">
+        <field name="name">finance.dashboard.kanban</field>
+        <field name="model">finance.dashboard</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard" create="false" edit="false" delete="false">
+                <field name="id"/>
+                <field name="currency_id"/>
+                <field name="chart_data_json"/>
+                
+                <field name="total_active_contracts"/>
+                <field name="total_portfolio_value"/>
+                <field name="total_overdue"/>
+                <field name="overdue_percentage"/>
+                <field name="total_penalties"/>
+                <field name="total_disbursed_mtd"/>
+                <field name="total_collected_mtd"/>
+                <field name="current_amount"/>
+                <field name="overdue_1_30"/>
+                <field name="overdue_31_60"/>
+                <field name="overdue_61_90"/>
+                <field name="overdue_90_plus"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="container-fluid o_finance_dashboard">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h2 class="mb-3">
+                                        <i class="fa fa-dashboard" title="Dashboard"/> Finance Dashboard
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="text-uppercase text-white-50 mb-1">Active Contracts</h6>
+                                                    <h3 class="mb-0">
+                                                        <t t-out="record.total_active_contracts.raw_value"/>
+                                                    </h3>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-file-text-o fa-3x opacity-50" title="Contracts"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="text-uppercase text-white-50 mb-1">Portfolio Value</h6>
+                                                    <h3 class="mb-0">
+                                                        <t t-out="record.currency_id.value"/>
+                                                        <t t-out="(record.total_portfolio_value.raw_value / 1000).toFixed(0)"/>K
+                                                    </h3>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-briefcase fa-3x opacity-50" title="Portfolio"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="card bg-warning text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="text-uppercase text-white-50 mb-1">Total Overdue</h6>
+                                                    <h3 class="mb-0">
+                                                        <t t-out="record.currency_id.value"/>
+                                                        <t t-out="(record.total_overdue.raw_value / 1000).toFixed(0)"/>K
+                                                    </h3>
+                                                    <small>
+                                                        <t t-out="record.overdue_percentage.raw_value.toFixed(1)"/>%
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-exclamation-triangle fa-3x opacity-50" title="Overdue"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6 class="text-uppercase text-white-50 mb-1">Penalties</h6>
+                                                    <h3 class="mb-0">
+                                                        <t t-out="record.currency_id.value"/>
+                                                        <t t-out="(record.total_penalties.raw_value / 1000).toFixed(0)"/>K
+                                                    </h3>
+                                                </div>
+                                                <div>
+                                                    <i class="fa fa-gavel fa-3x opacity-50" title="Penalties"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="fa fa-line-chart" title="Chart"/> Monthly Trend
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="finance_trend_chart" 
+                                                 class="o_finance_chart" 
+                                                 t-att-data-chart="record.chart_data_json.raw_value"
+                                                 style="height: 300px; width: 100%; position: relative;">
+                                                <div class="text-center text-muted pt-5">
+                                                    (Chart Container - Ready for JS)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <i class="fa fa-arrow-up" title="Out"/> Disbursed (MTD)
+                                        </div>
+                                        <div class="card-body">
+                                            <h2>
+                                                <t t-out="record.currency_id.value"/>
+                                                <t t-out="record.total_disbursed_mtd.raw_value.toLocaleString()"/>
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-success text-white">
+                                            <i class="fa fa-arrow-down" title="In"/> Collected (MTD)
+                                        </div>
+                                        <div class="card-body">
+                                            <h2>
+                                                <t t-out="record.currency_id.value"/>
+                                                <t t-out="record.total_collected_mtd.raw_value.toLocaleString()"/>
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="fa fa-calendar" title="Calendar"/> Aging Analysis
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col">
+                                                    <h6>Current</h6>
+                                                    <h4 class="text-success">
+                                                        <t t-out="(record.current_amount.raw_value / 1000).toFixed(0)"/>K
+                                                    </h4>
+                                                </div>
+                                                <div class="col">
+                                                    <h6>1-30 Days</h6>
+                                                    <h4 class="text-info">
+                                                        <t t-out="(record.overdue_1_30.raw_value / 1000).toFixed(0)"/>K
+                                                    </h4>
+                                                </div>
+                                                <div class="col">
+                                                    <h6>31-60 Days</h6>
+                                                    <h4 class="text-warning">
+                                                        <t t-out="(record.overdue_31_60.raw_value / 1000).toFixed(0)"/>K
+                                                    </h4>
+                                                </div>
+                                                <div class="col">
+                                                    <h6>61-90 Days</h6>
+                                                    <h4 class="text-orange">
+                                                        <t t-out="(record.overdue_61_90.raw_value / 1000).toFixed(0)"/>K
+                                                    </h4>
+                                                </div>
+                                                <div class="col">
+                                                    <h6>90+ Days</h6>
+                                                    <h4 class="text-danger">
+                                                        <t t-out="(record.overdue_90_plus.raw_value / 1000).toFixed(0)"/>K
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="fa fa-flash" title="Actions"/> Quick Actions
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="btn-group" role="group">
+                                                <button type="object" class="btn btn-primary" name="action_view_active_contracts">
+                                                    <i class="fa fa-list" title="List"/> Active
+                                                </button>
+                                                <button type="object" class="btn btn-warning" name="action_view_overdue">
+                                                    <i class="fa fa-warning" title="Warning"/> Overdue
+                                                </button>
+                                                <button type="object" class="btn btn-success" name="action_view_disbursements">
+                                                    <i class="fa fa-money" title="Money"/> Disbursements
+                                                </button>
+                                                <button type="object" class="btn btn-info" name="action_view_collections">
+                                                    <i class="fa fa-inbox" title="Inbox"/> Collections
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_finance_dashboard_server" model="ir.actions.server">
+        <field name="name">Dashboard</field>
+        <field name="model_id" ref="model_finance_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">
+dashboard = env['finance.dashboard'].search([], limit=1)
+if not dashboard:
+    dashboard = env['finance.dashboard'].create({})
+    
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Dashboard',
+    'res_model': 'finance.dashboard',
+    'view_mode': 'kanban',
+    'res_id': dashboard.id,
+    'target': 'current',
+}
+        </field>
+    </record>
+
+    <menuitem id="menu_finance_dashboard" name="Dashboard" parent="menu_finance_root" 
+              action="action_finance_dashboard_server" sequence="0"/>
+
+</odoo>

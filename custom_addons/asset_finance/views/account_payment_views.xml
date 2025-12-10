@@ -1,20 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Extend the Standard Payment Form to show Contract -->
     <record id="view_account_payment_form_asset_finance" model="ir.ui.view">
         <field name="name">account.payment.form.finance</field>
         <field name="model">account.payment</field>
         <field name="inherit_id" ref="account.view_account_payment_form"/>
         <field name="arch" type="xml">
-            <!-- Add Leasing Contract field after Partner field -->
+            
             <field name="partner_id" position="after">
                 <field name="contract_id" readonly="state != 'draft'"/>
                 <field name="asset_reg_no"/>
             </field>
+
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Payment Allocation" invisible="not contract_id or state == 'draft'">
+                        <group>
+                            <group string="Allocation Summary">
+                                <field name="allocated_to_penalties" widget="monetary"/>
+                                <field name="allocated_to_principal" widget="monetary"/>
+                                <field name="allocated_to_interest" widget="monetary"/>
+                            </group>
+                        </group>
+                        <field name="payment_allocation_ids" readonly="1">
+                            <list string="Allocation Details">
+                                <field name="contract_line_id"/>
+                                <field name="allocation_type" widget="badge"/>
+                                <field name="amount" widget="monetary" sum="Total"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+            
         </field>
     </record>
-    
-    <!-- Extend the Payment List (Tree) View to show Contract Column -->
+
     <record id="view_account_payment_list_asset_finance" model="ir.ui.view">
         <field name="name">account.payment.list.finance</field>
         <field name="model">account.payment</field>

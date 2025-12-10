@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Asset Finance Configuration Form -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.asset.finance</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app name="asset_finance" string="Asset Finance">
+
+                    <!-- Financial Parameters -->
+                    <block title="Financial Parameters">
+                        <setting id="hp_act_limit_setting">
+                            <label for="hp_act_limit" string="HP Act Limit"/>
+                            <div class="text-muted">
+                                Hire Purchase Act applies to contracts at or below this amount
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="hp_act_limit" class="col-lg-3 o_light_label"/>
+                                    <field name="hp_act_limit" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="grace_period_setting">
+                            <label for="grace_period_days" string="Payment Grace Period"/>
+                            <div class="text-muted">
+                                Days after due date before penalties start
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="grace_period_days" class="col-lg-3 o_light_label"/>
+                                    <field name="grace_period_days" class="oe_inline"/> days
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="settlement_rebate_setting">
+                            <label for="settlement_rebate_fee" string="Settlement Rebate Fee"/>
+                            <div class="text-muted">
+                                Percentage of unearned interest charged for early settlement
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="settlement_rebate_fee" class="col-lg-3 o_light_label"/>
+                                    <field name="settlement_rebate_fee" class="oe_inline"/> %
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                    <!-- Collection Management -->
+                    <block title="Collection Management">
+                        <setting id="late_attention_setting">
+                            <label for="late_attention_days" string="Late Status Thresholds"/>
+                            <div class="text-muted">
+                                Days overdue to trigger status changes
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="late_attention_days" class="col-lg-3 o_light_label">Attention Status</label>
+                                    <field name="late_attention_days" class="oe_inline"/> days
+                                </div>
+                                <div class="row">
+                                    <label for="late_legal_days" class="col-lg-3 o_light_label">Legal Action Status</label>
+                                    <field name="late_legal_days" class="oe_inline"/> days
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="auto_send_reminders_setting">
+                            <label for="auto_send_reminders" string="Automatic Payment Reminders"/>
+                            <div class="text-muted">
+                                Automatically send reminders before due date
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="auto_send_reminders" class="col-lg-3 o_light_label"/>
+                                    <field name="auto_send_reminders" class="oe_inline"/>
+                                </div>
+                                <div class="row" invisible="not auto_send_reminders">
+                                    <label for="reminder_days_before" class="col-lg-3 o_light_label">Send Reminder</label>
+                                    <field name="reminder_days_before" class="oe_inline"/> days before due date
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                    <!-- Accounting Configuration -->
+                    <block title="Accounting Configuration">
+                        <setting id="admin_fee_account_setting">
+                            <label for="admin_fee_account_id" string="Admin Fee Expense Account"/>
+                            <div class="text-muted">
+                                Account used for admin fee expenses during disbursement
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="admin_fee_account_id" class="col-lg-3 o_light_label"/>
+                                    <field name="admin_fee_account_id" class="oe_inline"
+                                           placeholder="Select account..."/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="penalty_income_account_setting">
+                            <label for="penalty_income_account_id" string="Penalty Income Account"/>
+                            <div class="text-muted">
+                                Account used to record penalty and late charge income
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="penalty_income_account_id" class="col-lg-3 o_light_label"/>
+                                    <field name="penalty_income_account_id" class="oe_inline"
+                                           placeholder="Select account..."/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="auto_recognize_interest_setting">
+                            <label for="auto_recognize_interest" string="Interest Recognition"/>
+                            <div class="text-muted">
+                                Automatically recognize earned interest monthly
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="auto_recognize_interest" class="col-lg-3 o_light_label"/>
+                                    <field name="auto_recognize_interest" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action to open Asset Finance Settings -->
+    <record id="action_asset_finance_config" model="ir.actions.act_window">
+        <field name="name">Asset Finance Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'asset_finance'}</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_asset_finance_settings"
+              name="Settings"
+              parent="menu_finance_config"
+              action="action_asset_finance_config"
+              sequence="1"
+              groups="base.group_system"/>
+
+</odoo>

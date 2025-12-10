@@ -135,28 +135,32 @@
         <field name="arch" type="xml">
             <form string="Financial Contract">
                 <header>
-                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" 
-                            invisible="ac_status != 'draft'" groups="account.group_account_manager"/>
-                    
-                    <button name="action_generate_schedule" string="Compute Schedule" type="object" 
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight"
+                            invisible="ac_status != 'draft'" groups="asset_finance.group_finance_manager"/>
+
+                    <button name="action_generate_schedule" string="Compute Schedule" type="object"
                         invisible="ac_status != 'draft'" class="btn-secondary"/>
 
                     <!-- Disbursement Action -->
                     <button name="action_disburse" string="Disbursement" type="object"
-                        class="btn-primary" invisible="ac_status != 'active' or disbursement_move_id"/>
+                        class="btn-primary" invisible="ac_status != 'active' or disbursement_move_id"
+                        groups="asset_finance.group_finance_manager"/>
 
-                    <button name="action_create_invoices" string="Post Due Invoices" type="object" 
-                        invisible="ac_status != 'active'" class="btn-secondary"/>
+                    <button name="action_create_invoices" string="Post Due Invoices" type="object"
+                        invisible="ac_status != 'active'" class="btn-secondary"
+                        groups="asset_finance.group_finance_manager"/>
 
-                    <button name="action_early_settlement" string="Early Settlement" type="object" 
+                    <button name="action_early_settlement" string="Early Settlement" type="object"
                         invisible="ac_status != 'active'" class="btn-warning"/>
 
-                    <button name="action_close" string="Close Account" type="object" 
-                            invisible="ac_status != 'active'"/>
-                    
-                    <button name="action_draft" string="Reset to Draft" type="object" 
-                            invisible="ac_status == 'draft'"/>
-                    
+                    <button name="action_close" string="Close Account" type="object"
+                            invisible="ac_status != 'active'"
+                            groups="asset_finance.group_finance_manager"/>
+
+                    <button name="action_draft" string="Reset to Draft" type="object"
+                            invisible="ac_status == 'draft'"
+                            groups="asset_finance.group_finance_manager"/>
+
                     <field name="ac_status" widget="statusbar" statusbar_visible="draft,active,closed"/>
                 </header>
                 <sheet>
