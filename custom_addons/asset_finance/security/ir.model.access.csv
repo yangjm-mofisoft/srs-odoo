@@ -32,7 +32,7 @@ access_finance_payment_allocation_officer,finance.payment.allocation.officer,mod
 access_finance_payment_allocation_manager,finance.payment.allocation.manager,model_finance_payment_allocation,group_finance_manager,1,1,1,1
 access_finance_payment_allocation_collection,finance.payment.allocation.collection,model_finance_payment_allocation,group_collection_staff,1,0,0,0
 access_finance_dashboard_officer,finance.dashboard.officer,model_finance_dashboard,group_finance_officer,1,0,0,0
-access_finance_dashboard_manager,finance.dashboard.manager,model_finance_dashboard,group_finance_manager,1,0,0,0
+access_finance_dashboard_manager,finance.dashboard.manager,model_finance_dashboard,group_finance_manager,1,1,1,1
 access_finance_dashboard_collection,finance.dashboard.collection,model_finance_dashboard,group_collection_staff,1,0,0,0
 access_finance_report_aging_officer,finance.report.aging.officer,model_finance_report_aging,group_finance_officer,1,0,0,0
 access_finance_report_aging_manager,finance.report.aging.manager,model_finance_report_aging,group_finance_manager,1,0,0,0
