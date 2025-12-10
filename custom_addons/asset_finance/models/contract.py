@@ -63,6 +63,9 @@ class FinanceContract(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'agreement_no'
 
+    company_id = fields.Many2one('res.company', string='Company', required=True, 
+                        default=lambda self: self.env.company, index=True)
+
     # --- Header Info ---
     hp_ac_no = fields.Char(string="HP A/C No.")
 
@@ -78,7 +81,7 @@ class FinanceContract(models.Model):
     asset_model = fields.Char(related='asset_id.vehicle_id.model_id.name', string="Model", store=True)
     asset_type = fields.Selection(related='asset_id.asset_type', string="Asset Type", store=True)
 
-    hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True)
+    hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True, tracking=True)
     ic_no = fields.Char(related='hirer_id.vat', string="ID / IC No.", readonly=False)
 
     agreement_date = fields.Date(string="Agreement Date", default=fields.Date.context_today)
@@ -139,9 +142,9 @@ class FinanceContract(models.Model):
     cash_price = fields.Monetary(string="Cash Price")
     down_payment = fields.Monetary(string="Down Payment")
 
-    loan_amount = fields.Monetary(string="Loan Amount", compute='_compute_financials', store=True)
-    int_rate_pa = fields.Float(string="Int Rate P.A.%")
-    no_of_inst = fields.Many2one('finance.term', string="No. of Inst.")
+    loan_amount = fields.Monetary(string="Loan Amount", compute='_compute_financials', store=True, tracking=True)
+    int_rate_pa = fields.Float(string="Int Rate P.A.%", tracking=True)
+    no_of_inst = fields.Many2one('finance.term', string="No. of Inst.", tracking=True)
 
     term_charges = fields.Monetary(string="Term Charges", compute='_compute_financials', store=True, readonly=False)
     balance_hire = fields.Monetary(string="Balance Hire (P + I)", compute='_compute_financials', store=True)

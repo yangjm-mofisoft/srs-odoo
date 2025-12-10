@@ -4,7 +4,7 @@
     <menuitem id="menu_finance_root" name="Asset Finance" sequence="10" web_icon="base,static/description/icon.png"/>
 
     <menuitem id="menu_finance_dashboard" name="Dashboard" parent="menu_finance_root"
-              action="action_finance_dashboard_server" sequence="0"/>
+              action="action_finance_dashboard" sequence="0"/>
 
     <menuitem id="menu_finance_operations" name="Operations" parent="menu_finance_root" sequence="10"/>
 

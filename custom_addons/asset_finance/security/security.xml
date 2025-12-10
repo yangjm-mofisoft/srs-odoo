@@ -31,6 +31,13 @@
 
         <!-- Record Rules -->
 
+        <record id="finance_contract_multi_company_rule" model="ir.rule">
+            <field name="name">Finance Contract: Multi-Company</field>
+            <field name="model_id" ref="model_finance_contract"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
         <!-- Finance Officers: Can see all contracts but limited actions -->
         <record id="finance_contract_officer_rule" model="ir.rule">
             <field name="name">Finance Contract: Officer Access</field>
