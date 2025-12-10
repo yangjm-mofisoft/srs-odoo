@@ -153,6 +153,6 @@
               parent="menu_finance_config"
               action="action_asset_finance_config"
               sequence="1"
-              groups="base.group_system"/>
+              groups="base.group_system,asset_finance.group_finance_manager"/>
 
 </odoo>

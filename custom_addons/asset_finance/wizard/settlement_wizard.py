@@ -19,12 +19,19 @@ class FinanceSettlementWizard(models.TransientModel):
     penalty_amount = fields.Monetary(string="Accrued Penalty")
     
     # --- Settlement Charges (Rules from Image) ---
-    # Rule: 20% of Rebate
-    rebate_fee_rate = fields.Float(string="Fee on Rebate (%)", default=20.0, help="Standard: 20% of Interest Rebate")
+    # Rule: Rebate fee from system configuration (default 20%)
+    rebate_fee_rate = fields.Float(
+        string="Fee on Rebate (%)",
+        help="Percentage of Interest Rebate charged as settlement fee (from system config)"
+    )
     rebate_fee_amount = fields.Monetary(string="Fee on Rebate", compute='_compute_fees', store=True)
-    
+
     # Rule: 1% or 2% of Principal (You can change default)
-    principal_fee_rate = fields.Float(string="Fee on Principal (%)", default=1.0, help="Standard: 1-2% of Outstanding Principal")
+    principal_fee_rate = fields.Float(
+        string="Fee on Principal (%)",
+        default=1.0,
+        help="Standard: 1-2% of Outstanding Principal"
+    )
     principal_fee_amount = fields.Monetary(string="Fee on Principal", compute='_compute_fees', store=True)
     
     notice_in_lieu_fee = fields.Monetary(string="Notice in Lieu Fee", help="1 month interest if insufficient notice given")
@@ -41,11 +48,18 @@ class FinanceSettlementWizard(models.TransientModel):
         context_id = self.env.context.get('active_id')
         if context_id:
             contract = self.env['finance.contract'].browse(context_id)
+
+            # Get rebate fee from system configuration instead of hardcoded default
+            rebate_fee_pct = float(self.env['ir.config_parameter'].sudo().get_param(
+                'asset_finance.settlement_rebate_fee', default=20.0
+            ))
+
             res.update({
                 'contract_id': contract.id,
                 'penalty_amount': contract.balance_late_charges,
+                'rebate_fee_rate': rebate_fee_pct,  # Use system config value
             })
-            
+
             # 1. Calculate Arrears (Invoiced but Unpaid)
             unpaid_invoices = self.env['account.move'].search([
                 ('invoice_origin', '=', contract.agreement_no),
@@ -53,12 +67,12 @@ class FinanceSettlementWizard(models.TransientModel):
                 ('payment_state', '!=', 'paid')
             ])
             res['arrears_amount'] = sum(unpaid_invoices.mapped('amount_residual'))
-            
+
             # 2. Calculate Future Principal & Rebate (Unbilled Lines)
             future_lines = contract.line_ids.filtered(lambda l: not l.invoice_id)
             res['outstanding_principal'] = sum(future_lines.mapped('amount_principal'))
             res['unearned_interest'] = sum(future_lines.mapped('amount_interest'))
-            
+
         return res
 
     @api.depends('outstanding_principal', 'unearned_interest', 'rebate_fee_rate', 'principal_fee_rate')

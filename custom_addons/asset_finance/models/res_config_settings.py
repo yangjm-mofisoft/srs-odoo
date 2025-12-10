@@ -8,10 +8,9 @@ class ResConfigSettings(models.TransientModel):
     # --------------------------------------------------------
 
     # HP Act Limit
-    hp_act_limit = fields.Monetary(
+    hp_act_limit = fields.Float(
         string="HP Act Limit",
         default=55000.0,
-        currency_field='currency_id',
         config_parameter='asset_finance.hp_act_limit',
         help="Hire Purchase Act applies to contracts with loan amounts at or below this limit."
     )
@@ -51,14 +50,12 @@ class ResConfigSettings(models.TransientModel):
     admin_fee_account_id = fields.Many2one(
         'account.account',
         string="Admin Fee Expense Account",
-        config_parameter='asset_finance.admin_fee_account_id',
         help="Account used for admin fee expenses during disbursement."
     )
 
     penalty_income_account_id = fields.Many2one(
         'account.account',
         string="Penalty Income Account",
-        config_parameter='asset_finance.penalty_income_account_id',
         help="Account used to record penalty/late charge income."
     )
 
@@ -94,26 +91,39 @@ class ResConfigSettings(models.TransientModel):
 
     @api.model
     def get_values(self):
-        """Override to load configuration values"""
+        """Override to load configuration values for Many2one fields"""
         res = super(ResConfigSettings, self).get_values()
-        params = self.env['ir.config_parameter'].sudo()
 
-        # Handle Many2one fields separately
-        admin_fee_account = params.get_param('asset_finance.admin_fee_account_id', default=False)
-        penalty_income_account = params.get_param('asset_finance.penalty_income_account_id', default=False)
+        # Get Many2one field values from config parameters
+        # Note: We search for the parameter records directly
+        admin_fee_param = self.env['ir.config_parameter'].sudo().search([
+            ('key', '=', 'asset_finance.admin_fee_account_id')
+        ], limit=1)
+        penalty_income_param = self.env['ir.config_parameter'].sudo().search([
+            ('key', '=', 'asset_finance.penalty_income_account_id')
+        ], limit=1)
+
+        admin_fee_account = admin_fee_param.value if admin_fee_param else ''
+        penalty_income_account = penalty_income_param.value if penalty_income_param else ''
 
         res.update(
-            admin_fee_account_id=int(admin_fee_account) if admin_fee_account else False,
-            penalty_income_account_id=int(penalty_income_account) if penalty_income_account else False,
+            admin_fee_account_id=int(admin_fee_account) if admin_fee_account and admin_fee_account != 'False' else False,
+            penalty_income_account_id=int(penalty_income_account) if penalty_income_account and penalty_income_account != 'False' else False,
         )
 
         return res
 
     def set_values(self):
-        """Override to save configuration values"""
+        """Override to save configuration values for Many2one fields"""
         super(ResConfigSettings, self).set_values()
-        params = self.env['ir.config_parameter'].sudo()
 
-        # Handle Many2one fields separately
-        params.set_param('asset_finance.admin_fee_account_id', self.admin_fee_account_id.id or False)
-        params.set_param('asset_finance.penalty_income_account_id', self.penalty_income_account_id.id or False)
+        # Save Many2one field values to config parameters
+        # Use set_param which creates or updates the parameter
+        self.env['ir.config_parameter'].sudo().set_param(
+            'asset_finance.admin_fee_account_id',
+            str(self.admin_fee_account_id.id) if self.admin_fee_account_id else 'False'
+        )
+        self.env['ir.config_parameter'].sudo().set_param(
+            'asset_finance.penalty_income_account_id',
+            str(self.penalty_income_account_id.id) if self.penalty_income_account_id else 'False'
+        )

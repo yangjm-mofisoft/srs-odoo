@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Access Rights Management for Asset Finance -->
+
+    <!-- Custom action for Access Rights filtered to Asset Finance models -->
+    <record id="action_asset_finance_access_rights" model="ir.actions.act_window">
+        <field name="name">Access Rights</field>
+        <field name="res_model">ir.model.access</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('model_id.model', 'like', 'finance.%')]</field>
+        <field name="context">{'search_default_group_by_model': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Access Rights for Asset Finance Models
+            </p>
+            <p>
+                Access rights define which user groups can Create, Read, Write, or Delete records for each model.
+                <br/>
+                Changes take effect immediately - no module upgrade required.
+            </p>
+        </field>
+    </record>
+
+    <!-- Custom action for Security Groups -->
+    <record id="action_asset_finance_security_groups" model="ir.actions.act_window">
+        <field name="name">User Roles (Security Groups)</field>
+        <field name="res_model">res.groups</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('name', 'in', ['Finance Officer', 'Finance Manager', 'Collection Staff'])]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage User Roles (Security Groups)
+            </p>
+            <p>
+                Security groups define sets of permissions that can be assigned to users.
+                <br/>
+                Each role determines what menus, actions, and data a user can access.
+            </p>
+        </field>
+    </record>
+
+    <!-- Custom List View for Access Rights (Grouped by Model) -->
+    <record id="view_access_rights_list_asset_finance" model="ir.ui.view">
+        <field name="name">ir.model.access.list.asset.finance</field>
+        <field name="model">ir.model.access</field>
+        <field name="arch" type="xml">
+            <list string="Access Rights" editable="bottom">
+                <field name="name"/>
+                <field name="model_id" options="{'no_create': True}"/>
+                <field name="group_id"/>
+                <field name="perm_read" widget="boolean_toggle"/>
+                <field name="perm_write" widget="boolean_toggle"/>
+                <field name="perm_create" widget="boolean_toggle"/>
+                <field name="perm_unlink" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View for Access Rights -->
+    <record id="view_access_rights_search_asset_finance" model="ir.ui.view">
+        <field name="name">ir.model.access.search.asset.finance</field>
+        <field name="model">ir.model.access</field>
+        <field name="arch" type="xml">
+            <search string="Search Access Rights">
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="group_id"/>
+                <filter string="Read Only" name="filter_read_only"
+                        domain="[('perm_read', '=', True), ('perm_write', '=', False)]"/>
+                <filter string="Full Access" name="filter_full_access"
+                        domain="[('perm_read', '=', True), ('perm_write', '=', True), ('perm_create', '=', True), ('perm_unlink', '=', True)]"/>
+                <filter string="Model" name="group_by_model" context="{'group_by': 'model_id'}"/>
+                <filter string="Security Group" name="group_by_group" context="{'group_by': 'group_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Menu Items for Security Management -->
+    <menuitem id="menu_finance_security"
+              name="Security"
+              parent="menu_finance_config"
+              sequence="80"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_finance_access_rights"
+              name="Access Rights"
+              parent="menu_finance_security"
+              action="action_asset_finance_access_rights"
+              sequence="10"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_finance_security_groups"
+              name="User Roles"
+              parent="menu_finance_security"
+              action="action_asset_finance_security_groups"
+              sequence="20"
+              groups="base.group_system"/>
+
+    <!-- Record Rules Menu -->
+    <menuitem id="menu_finance_record_rules"
+              name="Record Rules"
+              parent="menu_finance_security"
+              action="base.action_rule"
+              sequence="30"
+              groups="base.group_system"/>
+
+</odoo>

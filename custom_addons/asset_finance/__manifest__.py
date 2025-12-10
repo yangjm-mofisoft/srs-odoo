@@ -14,6 +14,7 @@
         'data/account_chart_data.xml',
         'data/mail_templates.xml',
         'views/res_config_settings_views.xml',
+        'views/access_rights_views.xml',
         'views/dashboard_views.xml',
         'views/asset_views.xml',
         'views/asset_sg_views.xml',

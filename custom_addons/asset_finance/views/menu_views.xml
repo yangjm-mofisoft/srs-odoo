@@ -63,10 +63,18 @@
     <menuitem id="menu_finance_taxes" name="Taxes" parent="menu_finance_config" 
               action="account.action_tax_form" sequence="20" groups="account.group_account_manager"/>
 
-    <menuitem id="menu_finance_penalty_rules" 
-              name="Penalty Rules" 
-              parent="menu_finance_config" 
-              action="action_asset_finance_penalty_rule" 
+    <menuitem id="menu_finance_penalty_rules"
+              name="Penalty Rules"
+              parent="menu_finance_config"
+              action="action_asset_finance_penalty_rule"
               sequence="30"/>
+
+    <!-- Users Management Menu -->
+    <menuitem id="menu_finance_users"
+              name="Users"
+              parent="menu_finance_config"
+              action="base.action_res_users"
+              sequence="90"
+              groups="base.group_system"/>
 
 </odoo>

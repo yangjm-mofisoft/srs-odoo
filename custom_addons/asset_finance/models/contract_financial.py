@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools import float_round
 from dateutil.relativedelta import relativedelta
 import math
 
@@ -107,8 +108,9 @@ class FinanceContract(models.Model):
                 # Flat Rate: Evenly distributed
                 interest_portion = total_interest / n
 
-            # Rounding to 2 decimal places is crucial for currency
-            interest_portion = round(interest_portion, 2)
+            # Use Odoo's float_round with currency precision to avoid penny-rounding errors
+            precision = self.currency_id.decimal_places
+            interest_portion = float_round(interest_portion, precision_digits=precision)
 
             # --- B. Principal Calculation ---
             # Determine the installment amount for this specific line
@@ -121,9 +123,14 @@ class FinanceContract(models.Model):
 
             # --- C. Final Installment Adjustment ---
             if i == n:
-                principal_portion = total_principal - allocated_principal
-                interest_portion = total_interest - allocated_interest
-                amount_total = principal_portion + interest_portion
+                # For final installment, ensure all remaining amounts are allocated precisely
+                principal_portion = float_round(total_principal - allocated_principal, precision_digits=precision)
+                interest_portion = float_round(total_interest - allocated_interest, precision_digits=precision)
+                amount_total = float_round(principal_portion + interest_portion, precision_digits=precision)
+            else:
+                # Round principal portion for intermediate installments
+                principal_portion = float_round(principal_portion, precision_digits=precision)
+                amount_total = float_round(amount_total, precision_digits=precision)
 
             # Append the line
             lines.append((0, 0, {

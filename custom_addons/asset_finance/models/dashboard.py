@@ -85,48 +85,83 @@ class FinanceDashboard(models.Model):
         return {'monthly_trend': months_data}
 
     def _compute_kpis(self):
+        """Optimized KPI computation using direct SQL queries"""
         for rec in self:
-            active_contracts = self.env['finance.contract'].search([('ac_status', '=', 'active')])
-            rec.total_active_contracts = len(active_contracts)
-            rec.total_portfolio_value = sum(active_contracts.mapped('os_balance'))
-            rec.total_penalties = sum(active_contracts.mapped('accrued_penalty'))
+            # Use SQL for better performance - avoids loading all records into memory
+            self.env.cr.execute("""
+                SELECT
+                    COUNT(*) as contract_count,
+                    COALESCE(SUM(os_balance), 0) as portfolio_value,
+                    COALESCE(SUM(accrued_penalty), 0) as total_penalties,
+                    COALESCE(SUM(balance_installment), 0) as total_outstanding,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 THEN balance_installment ELSE 0 END), 0) as total_overdue
+                FROM finance_contract
+                WHERE ac_status = 'active'
+            """)
 
-            total_outstanding = sum(active_contracts.mapped('balance_installment'))
-            overdue_contracts = active_contracts.filtered(lambda c: c.total_overdue_days > 0)
-            rec.total_overdue = sum(overdue_contracts.mapped('balance_installment'))
-            
+            result = self.env.cr.dictfetchone()
+
+            rec.total_active_contracts = result['contract_count'] or 0
+            rec.total_portfolio_value = result['portfolio_value'] or 0.0
+            rec.total_penalties = result['total_penalties'] or 0.0
+            rec.total_overdue = result['total_overdue'] or 0.0
+
+            total_outstanding = result['total_outstanding'] or 0.0
             if total_outstanding > 0:
                 rec.overdue_percentage = (rec.total_overdue / total_outstanding) * 100
             else:
                 rec.overdue_percentage = 0.0
 
     def _compute_mtd(self):
+        """Optimized MTD computation using SQL queries"""
         today = fields.Date.today()
         first_day = today.replace(day=1)
-        for rec in self:
-            disbursed = self.env['account.move'].search([
-                ('ref', 'like', 'Disbursement for%'),
-                ('date', '>=', first_day), ('date', '<=', today),
-                ('state', '=', 'posted')
-            ])
-            rec.total_disbursed_mtd = sum(disbursed.mapped('amount_total'))
 
-            payments = self.env['account.payment'].search([
-                ('contract_id', '!=', False),
-                ('payment_type', '=', 'inbound'),
-                ('date', '>=', first_day), ('date', '<=', today),
-                ('state', '=', 'posted')
-            ])
-            rec.total_collected_mtd = sum(payments.mapped('amount'))
+        for rec in self:
+            # Disbursements MTD using SQL
+            self.env.cr.execute("""
+                SELECT COALESCE(SUM(amount_total), 0) as total_disbursed
+                FROM account_move
+                WHERE ref LIKE 'Disbursement for%%'
+                    AND date >= %s
+                    AND date <= %s
+                    AND state = 'posted'
+            """, (first_day, today))
+            rec.total_disbursed_mtd = self.env.cr.dictfetchone()['total_disbursed'] or 0.0
+
+            # Collections MTD using SQL
+            self.env.cr.execute("""
+                SELECT COALESCE(SUM(amount), 0) as total_collected
+                FROM account_payment
+                WHERE contract_id IS NOT NULL
+                    AND payment_type = 'inbound'
+                    AND date >= %s
+                    AND date <= %s
+                    AND state = 'posted'
+            """, (first_day, today))
+            rec.total_collected_mtd = self.env.cr.dictfetchone()['total_collected'] or 0.0
 
     def _compute_aging(self):
+        """Optimized aging computation using SQL queries"""
         for rec in self:
-            active_contracts = self.env['finance.contract'].search([('ac_status', '=', 'active')])
-            rec.current_amount = sum(active_contracts.filtered(lambda c: c.total_overdue_days == 0).mapped('balance_installment'))
-            rec.overdue_1_30 = sum(active_contracts.filtered(lambda c: 0 < c.total_overdue_days <= 30).mapped('balance_installment'))
-            rec.overdue_31_60 = sum(active_contracts.filtered(lambda c: 30 < c.total_overdue_days <= 60).mapped('balance_installment'))
-            rec.overdue_61_90 = sum(active_contracts.filtered(lambda c: 60 < c.total_overdue_days <= 90).mapped('balance_installment'))
-            rec.overdue_90_plus = sum(active_contracts.filtered(lambda c: c.total_overdue_days > 90).mapped('balance_installment'))
+            # Use SQL to compute aging buckets in a single query
+            self.env.cr.execute("""
+                SELECT
+                    COALESCE(SUM(CASE WHEN total_overdue_days = 0 THEN balance_installment ELSE 0 END), 0) as current,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 AND total_overdue_days <= 30 THEN balance_installment ELSE 0 END), 0) as overdue_1_30,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 30 AND total_overdue_days <= 60 THEN balance_installment ELSE 0 END), 0) as overdue_31_60,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 60 AND total_overdue_days <= 90 THEN balance_installment ELSE 0 END), 0) as overdue_61_90,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 90 THEN balance_installment ELSE 0 END), 0) as overdue_90_plus
+                FROM finance_contract
+                WHERE ac_status = 'active'
+            """)
+
+            result = self.env.cr.dictfetchone()
+            rec.current_amount = result['current'] or 0.0
+            rec.overdue_1_30 = result['overdue_1_30'] or 0.0
+            rec.overdue_31_60 = result['overdue_31_60'] or 0.0
+            rec.overdue_61_90 = result['overdue_61_90'] or 0.0
+            rec.overdue_90_plus = result['overdue_90_plus'] or 0.0
 
     
     def action_view_active_contracts(self):

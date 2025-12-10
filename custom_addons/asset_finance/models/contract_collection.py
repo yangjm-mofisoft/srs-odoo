@@ -48,51 +48,89 @@ class FinanceContract(models.Model):
 
     def _cron_calculate_late_interest(self):
         """
-        Run nightly to calculate penalties based on the selected Rule
-        Called by scheduled action defined in data/cron.xml
+        Run nightly to calculate penalties based on the selected Rule.
+        Called by scheduled action defined in data/cron.xml.
+
+        Optimized with batch commits to prevent long-running transaction locks.
         """
         # Ensure we only check active contracts that have a rule assigned
         active_contracts = self.search([('ac_status', '=', 'active'), ('penalty_rule_id', '!=', False)])
         today = fields.Date.today()
 
-        for contract in active_contracts:
-            rule = contract.penalty_rule_id
-            penalty_amount = 0.0
+        batch_size = 100  # Process 100 contracts per batch to prevent DB locks
+        total_processed = 0
+        total_penalties_accrued = 0.0
 
-            # Find overdue lines
-            overdue_lines = contract.line_ids.filtered(
-                lambda l: l.date_due and l.date_due < today and l.invoice_id.payment_state != 'paid'
-            )
+        for i in range(0, len(active_contracts), batch_size):
+            batch = active_contracts[i:i + batch_size]
 
-            for line in overdue_lines:
-                days_late = (today - line.date_due).days
+            # Process each contract in the batch
+            for contract in batch:
+                try:
+                    rule = contract.penalty_rule_id
+                    penalty_amount = 0.0
 
-                # Check Grace Period
-                if days_late <= rule.grace_period_days:
+                    # Find overdue lines
+                    overdue_lines = contract.line_ids.filtered(
+                        lambda l: l.date_due and l.date_due < today and l.invoice_id.payment_state != 'paid'
+                    )
+
+                    for line in overdue_lines:
+                        days_late = (today - line.date_due).days
+
+                        # Check Grace Period
+                        if days_late <= rule.grace_period_days:
+                            continue
+
+                        if rule.method == 'daily_percent':
+                            # Logic: (Principal * Rate / 100) / 365
+                            daily_rate = (rule.rate / 100) / 365
+                            daily_penalty = line.amount_principal * daily_rate
+                            penalty_amount += daily_penalty
+
+                        elif rule.method == 'fixed_one_time':
+                            # Check if penalty was already applied for this line
+                            if not line.penalty_applied:
+                                penalty_amount += rule.fixed_amount
+                                line.penalty_applied = True
+
+                    # Update the balance
+                    if penalty_amount > 0:
+                        contract.accrued_penalty += penalty_amount
+                        contract.balance_late_charges = contract.accrued_penalty - contract.total_late_paid
+
+                        # Log in chatter
+                        contract.message_post(
+                            body=f"Penalty of {contract.currency_id.symbol}{penalty_amount:.2f} accrued. "
+                                 f"Total penalties: {contract.currency_id.symbol}{contract.accrued_penalty:.2f}"
+                        )
+
+                        total_penalties_accrued += penalty_amount
+                        total_processed += 1
+
+                except Exception as e:
+                    # Log error but continue processing other contracts
+                    contract.message_post(
+                        body=f"Error calculating penalty: {str(e)}",
+                        message_type='notification'
+                    )
                     continue
 
-                if rule.method == 'daily_percent':
-                    # Logic: (Principal * Rate / 100) / 365
-                    daily_rate = (rule.rate / 100) / 365
-                    daily_penalty = line.amount_principal * daily_rate
-                    penalty_amount += daily_penalty
+            # Commit after each batch to prevent long-running locks
+            self.env.cr.commit()
 
-                elif rule.method == 'fixed_one_time':
-                    # Check if penalty was already applied for this line
-                    if not line.penalty_applied:
-                        penalty_amount += rule.fixed_amount
-                        line.penalty_applied = True
-
-            # Update the balance
-            if penalty_amount > 0:
-                contract.accrued_penalty += penalty_amount
-                contract.balance_late_charges = contract.accrued_penalty - contract.total_late_paid
-
-                # Log in chatter
-                contract.message_post(
-                    body=f"Penalty of {contract.currency_id.symbol}{penalty_amount:.2f} accrued. "
-                         f"Total penalties: {contract.currency_id.symbol}{contract.accrued_penalty:.2f}"
-                )
+        # Log summary in server logs
+        if total_processed > 0:
+            _logger = self.env['ir.logging']
+            _logger.sudo().create({
+                'name': 'Penalty Calculation Cron',
+                'type': 'server',
+                'level': 'info',
+                'message': f"Processed {total_processed} contracts. Total penalties accrued: {total_penalties_accrued:.2f}",
+                'path': 'asset_finance.contract_collection',
+                'func': '_cron_calculate_late_interest',
+                'line': '49'
+            })
 
     # --------------------------------------------------------
     # COLLECTION NOTICES & ACTIONS
