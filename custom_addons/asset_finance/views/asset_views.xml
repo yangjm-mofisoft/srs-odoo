@@ -1,30 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record id="view_finance_asset_search" model="ir.ui.view">
+        <field name="name">finance.asset.search</field>
+        <field name="model">finance.asset</field>
+        <field name="arch" type="xml">
+            <search string="Search Assets">
+                <field name="name"/>
+                <field name="registration_no"/>
+                <field name="chassis_no"/>
+                <field name="serial_no"/>
+                <field name="status"/>
+                <filter string="Available" name="available" domain="[('status', '=', 'available')]"/>
+                <filter string="Financed" name="financed" domain="[('status', '=', 'financed')]"/>
+                <separator/>
+                <filter string="Type" name="group_type" context="{'group_by': 'asset_type'}"/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+            </search>
+        </field>
+    </record>
+
     <record id="view_finance_asset_form" model="ir.ui.view">
         <field name="name">finance.asset.form</field>
         <field name="model">finance.asset</field>
         <field name="arch" type="xml">
             <form string="Asset">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="available,financed,repo,sold"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="e.g. Toyota Camry 2023"/></h1>
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Toyota Camry / Dell Server"/></h1>
+                        <h3>
+                            <field name="registration_no" placeholder="Reg No" invisible="asset_type != 'vehicle'"/>
+                            <field name="serial_no" placeholder="Serial No" invisible="asset_type == 'vehicle'"/>
+                        </h3>
                     </div>
                     <group>
-                        <group>
-                            <field name="asset_type"/>
+                        <group string="Identification">
                             <field name="internal_ref"/>
-                            <field name="serial_no"/>
-                            <field name="status"/>
+                            <field name="asset_type"/>
+                            <field name="vehicle_id" options="{'no_create': False}" invisible="asset_type != 'vehicle'"/>
                         </group>
-                        <group>
-                            <field name="description" placeholder="Additional details about the asset..."/>
+                        <group string="Key Specs">
+                            <field name="make"/>
+                            <field name="model"/>
+                            <field name="vehicle_type" invisible="asset_type != 'vehicle'"/>
+                            <field name="vehicle_color" invisible="asset_type != 'vehicle'"/>
                         </group>
                     </group>
-                    <group string="Vehicle Details" invisible="asset_type != 'vehicle'">
-                        <field name="vehicle_id" options="{'no_create': False, 'no_open': False}"/>
-                    </group>
+                    
+                    <notebook>
+                        <page string="Vehicle Details" invisible="asset_type != 'vehicle'">
+                            <group>
+                                <group string="Registration Info">
+                                    <field name="chassis_no" readonly="vehicle_id != False" force_save="1"/>
+                                    <field name="engine_no"/>
+                                    <field name="engine_capacity"/>
+                                    <field name="year_manufacture"/>
+                                    <field name="no_of_transfers"/>
+                                </group>
+                                <group string="Condition" name="vehicle_condition_group">
+                                    <field name="vehicle_condition"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Description">
+                            <field name="description" placeholder="Add detailed notes, accessories, or equipment specs here..."/>
+                        </page>
+                    </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -34,10 +81,14 @@
         <field name="model">finance.asset</field>
         <field name="arch" type="xml">
             <list string="Assets">
-                <field name="display_name"/>
+                <field name="internal_ref" optional="hide"/>
+                <field name="name"/>
+                <field name="registration_no" optional="show"/>
+                <field name="serial_no" optional="hide"/>
                 <field name="asset_type"/>
-                <field name="serial_no"/>
-                <field name="status"/>
+                <field name="status" widget="badge" 
+                       decoration-success="status == 'available'" 
+                       decoration-info="status == 'financed'"/>
             </list>
         </field>
     </record>
@@ -46,6 +97,7 @@
         <field name="name">Assets</field>
         <field name="res_model">finance.asset</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_finance_asset_search"/>
     </record>
 
 </odoo>

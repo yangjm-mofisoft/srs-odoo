@@ -20,6 +20,27 @@
         </field>
     </record>
 
+    <!-- Search -->
+    <record id="view_finance_contract_search" model="ir.ui.view">
+        <field name="name">finance.contract.search</field>
+        <field name="model">finance.contract</field>
+        <field name="arch" type="xml">
+            <search string="Search Contracts">
+                <field name="agreement_no"/>
+                <field name="hirer_id"/>
+                <field name="asset_reg_no"/>
+                <field name="hp_ac_no"/>
+                <filter string="Draft" name="draft" domain="[('ac_status', '=', 'draft')]"/>
+                <filter string="Active" name="active" domain="[('ac_status', '=', 'active')]"/>
+                <filter string="Closed" name="closed" domain="[('ac_status', '=', 'closed')]"/>
+                <filter string="Repossessed" name="repo" domain="[('ac_status', '=', 'repo')]"/>
+                <separator/>
+                <filter string="Status" name="group_status" context="{'group_by': 'ac_status'}"/>
+                <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+            </search>
+        </field>
+    </record>
+
     <!-- ACTIONS: Contract -->
     <record id="action_finance_contract" model="ir.actions.act_window">
         <field name="name">Contracts</field>
@@ -287,7 +308,7 @@
                                 <field name="next_inst_date"/>
                             </group>
                             <group string="Penalty Status">
-                                <field name="penalty_rule_id"/>
+                                <field name="penalty_rule_id" readonly="ac_status != 'draft'"/>
                                 <field name="total_overdue_days" decoration-danger="total_overdue_days > 0"/>
                                 <field name="accrued_penalty" widget="monetary" decoration-danger="accrued_penalty > 0"/>
                             </group>

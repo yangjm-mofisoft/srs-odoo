@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_finance_asset_form_sg" model="ir.ui.view">
+        <field name="name">finance.asset.form.sg</field>
+        <field name="model">finance.asset</field>
+        <field name="inherit_id" ref="asset_finance.view_finance_asset_form"/>
+        <field name="arch" type="xml">
+            
+            <xpath expr="//group[@name='vehicle_condition_group']" position="inside">
+                <field name="opc" widget="radio" options="{'horizontal': true}"/>
+                <field name="phv" widget="radio" options="{'horizontal': true}"/>
+                <field name="omv_check" widget="radio" options="{'horizontal': true}"/>
+            </xpath>
+
+            <xpath expr="//page[1]" position="after">
+                <page string="Singapore Financials" invisible="asset_type != 'vehicle'">
+                    <group>
+                        <group string="COE">
+                            <field name="coe_no"/>
+                            <field name="coe_category"/>
+                            <field name="coe_amount" widget="monetary"/>
+                        </group>
+                        <group string="Tax &amp; Value">
+                            <field name="arf_amount" widget="monetary"/>
+                            <field name="parf_amount" widget="monetary"/>
+                            <field name="parf_expire_date"/>
+                            <field name="market_valuation" widget="monetary" class="oe_subtotal_footer_separator"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

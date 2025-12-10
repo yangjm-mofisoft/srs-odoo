@@ -210,8 +210,7 @@ class FinanceContract(models.Model):
     invoice_count = fields.Integer(compute='_compute_invoice_count', string="Invoice Count")
     
     # Penalty Rule
-    penalty_rule_id = fields.Many2one('finance.penalty.rule', string="Penalty Rule", 
-                                      readonly=True, states={'draft': [('readonly', False)]})
+    penalty_rule_id = fields.Many2one('finance.penalty.rule', string="Penalty Rule")
                                       
     total_overdue_days = fields.Integer(string="Days Overdue", compute='_compute_overdue_status', store=True)
     accrued_penalty = fields.Monetary(string="Accrued Penalty", currency_field='currency_id', default=0.0)

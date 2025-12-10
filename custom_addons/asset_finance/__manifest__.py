@@ -12,6 +12,7 @@
         'data/finance_term_data.xml',
         'data/account_chart_data.xml',
         'views/asset_views.xml',
+        'views/asset_sg_views.xml',
         # 'views/res_partner_contact_views.xml', # Security for new model
         'views/res_partner_views.xml',
         'views/product_views.xml',

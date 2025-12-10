@@ -1,6 +1,7 @@
 from . import master
 from . import term
 from . import asset
+from . import asset_sg
 from . import contract
 from . import contract_line
 from . import account_payment
