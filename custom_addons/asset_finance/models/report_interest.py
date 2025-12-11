@@ -35,6 +35,10 @@ class FinanceInterestIncomeReport(models.Model):
 
     currency_id = fields.Many2one('res.currency', readonly=True)
 
+    def _valid_field_parameter(self, field, name):
+        # Allow group_operator parameter for aggregation in reports
+        return name == 'group_operator' or super()._valid_field_parameter(field, name)
+
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
         self.env.cr.execute("""

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Asset Finance Theme - Assets are loaded via __manifest__.py -->
+    <!-- This file is kept for potential future template overrides -->
+</odoo>
