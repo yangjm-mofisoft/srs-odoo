@@ -21,6 +21,7 @@
         'views/asset_sg_views.xml',
         # 'views/res_partner_contact_views.xml', # Security for new model
         'views/res_partner_views.xml',
+        'views/partner_menus.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
         'views/contract_views.xml',

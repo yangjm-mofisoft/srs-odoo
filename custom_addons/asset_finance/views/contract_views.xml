@@ -8,12 +8,18 @@
         <field name="arch" type="xml">
             <list string="Financial Contracts">
                 <field name="agreement_no"/>
+                <field name="application_type" optional="hide"/>
                 <field name="product_id"/>
                 <!-- Uses product_type correctly -->
                 <field name="product_type" optional="show"/>
                 <field name="agreement_date"/>
                 <field name="hirer_id"/>
+                <field name="sales_agent_id" optional="hide"/>
+                <field name="insurer_id" optional="hide"/>
                 <field name="asset_reg_no"/>
+                <field name="asset_condition" optional="hide"/>
+                <field name="interest_type" optional="hide"/>
+                <field name="installment_pattern" optional="hide"/>
                 <field name="balance_hire"/>
                 <field name="ac_status" widget="badge" decoration-success="ac_status == 'active'" decoration-muted="ac_status == 'closed'"/>
             </list>
@@ -30,13 +36,28 @@
                 <field name="hirer_id"/>
                 <field name="asset_reg_no"/>
                 <field name="hp_ac_no"/>
+                <field name="sales_agent_id"/>
+                <field name="insurer_id"/>
                 <filter string="Draft" name="draft" domain="[('ac_status', '=', 'draft')]"/>
                 <filter string="Active" name="active" domain="[('ac_status', '=', 'active')]"/>
                 <filter string="Closed" name="closed" domain="[('ac_status', '=', 'closed')]"/>
                 <filter string="Repossessed" name="repo" domain="[('ac_status', '=', 'repo')]"/>
                 <separator/>
+                <filter string="Hire Purchase" name="filter_hp" domain="[('application_type', '=', 'hp')]"/>
+                <filter string="Floor Stock" name="filter_floor" domain="[('application_type', '=', 'floor_stock')]"/>
+                <filter string="Leasing" name="filter_lease" domain="[('application_type', '=', 'lease')]"/>
+                <separator/>
+                <filter string="New Assets" name="filter_new" domain="[('asset_condition', '=', 'new')]"/>
+                <filter string="Used Assets" name="filter_used" domain="[('asset_condition', '=', 'used')]"/>
+                <filter string="Flat Rate" name="filter_flat" domain="[('interest_type', '=', 'flat')]"/>
+                <filter string="Effective Rate" name="filter_effective" domain="[('interest_type', '=', 'effective')]"/>
+                <separator/>
                 <filter string="Status" name="group_status" context="{'group_by': 'ac_status'}"/>
                 <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                <filter string="Application Type" name="group_app_type" context="{'group_by': 'application_type'}"/>
+                <filter string="Sales Agent" name="group_agent" context="{'group_by': 'sales_agent_id'}"/>
+                <filter string="Asset Condition" name="group_condition" context="{'group_by': 'asset_condition'}"/>
+                <filter string="Interest Type" name="group_interest" context="{'group_by': 'interest_type'}"/>
             </search>
         </field>
     </record>
@@ -195,7 +216,12 @@
                                     <field name="product_type" readonly="1"/>
                                     <field name="hp_ac_no"/>
                                     <field name="ic_no"/>
-                                    
+
+                                    <!-- NEW FIELDS: Application Type, Sales Agent, Insurer -->
+                                    <field name="application_type" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="sales_agent_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <field name="insurer_id" options="{'no_create': True, 'no_open': True}"/>
+
                                     <separator string="Guarantors &amp; Co-Borrowers" colspan="2"/>
                                     <field name="guarantor_line_ids" nolabel="1" colspan="2">
                                         <list string="Guarantors">
@@ -223,6 +249,7 @@
                                     <field name="asset_reg_no"/>
                                     <field name="asset_make"/>
                                     <field name="asset_model"/>
+                                    <field name="asset_condition" widget="radio" options="{'horizontal': true}"/>
                                 </group>
                                 <group string="Terms">
                                     <field name="is_hp_act" decoration-danger="not is_hp_act" decoration-success="is_hp_act" widget="boolean_toggle"/>
@@ -249,6 +276,7 @@
                                     <field name="down_payment"/>
                                     <field name="loan_amount" widget="monetary"/>
                                     <field name="int_rate_pa"/>
+                                    <field name="interest_type" widget="radio"/>
                                     <field name="no_of_inst"/>
                                     <field name="term_charges"/>
                                     <field name="balance_hire" class="oe_subtotal_footer_separator"/>
@@ -260,6 +288,7 @@
                                     <field name="excess_mileage_rate"/>
                                 </group>
                                 <group string="Installment Plan">
+                                    <field name="installment_pattern" widget="radio"/>
                                     <field name="first_inst_amount"/>
                                     <field name="monthly_inst"/>
                                     <field name="last_inst_amount"/>

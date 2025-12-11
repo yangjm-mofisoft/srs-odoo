@@ -13,6 +13,12 @@
             <field name="vat" position="after">
                 <field name="nric"/>
                 <field name="date_of_birth"/>
+                <field name="finance_partner_type"
+                       widget="badge"
+                       decoration-success="finance_partner_type == 'broker'"
+                       decoration-warning="finance_partner_type == 'insurer'"
+                       decoration-primary="finance_partner_type == 'finance_company'"
+                       decoration-muted="finance_partner_type == 'supplier'"/>
             </field>
 
             <xpath expr="//field[@name='child_ids']/form//field[@name='type']" position="after">
@@ -33,10 +39,12 @@
 
                 <page string="Finance Info">
                     <group>
-                        <group string="Roles">
-                            <field name="is_finance_guarantor"/>
-                            <field name="is_finance_joint_hirer"/>
-                            <field name="is_finance_broker"/>
+                        <group string="Partner Type">
+                            <field name="finance_partner_type" widget="radio"/>
+                            <separator string="Deprecated Fields (For Migration)" colspan="2"/>
+                            <field name="is_finance_guarantor" readonly="1" invisible="1"/>
+                            <field name="is_finance_joint_hirer" readonly="1" invisible="1"/>
+                            <field name="is_finance_broker" readonly="1" invisible="1"/>
                         </group>
                         <group string="Risk Management">
                             <field name="finance_blacklist" widget="boolean_toggle"/>

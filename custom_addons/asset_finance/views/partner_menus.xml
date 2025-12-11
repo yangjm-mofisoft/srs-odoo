@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ACTION: Customers (Individuals or Companies without specialized business type) -->
+    <record id="action_finance_customers" model="ir.actions.act_window">
+        <field name="name">Customers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('finance_partner_type', 'in', [False, ''])]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Customer
+            </p>
+            <p>
+                Customers can be individuals or companies who can act as:
+            </p>
+            <ul>
+                <li>Hirers (borrowers)</li>
+                <li>Guarantors</li>
+                <li>Co-Borrowers</li>
+            </ul>
+            <p>
+                The same partner can have different roles in different contracts.
+                Use the "Is a Company" checkbox to indicate if this is a company or individual.
+            </p>
+        </field>
+    </record>
+
+    <!-- ACTION: Sales Agents/Brokers -->
+    <record id="action_finance_brokers" model="ir.actions.act_window">
+        <field name="name">Sales Agents / Brokers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('finance_partner_type', '=', 'broker')]</field>
+        <field name="context">{'default_finance_partner_type': 'broker'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Sales Agent / Broker
+            </p>
+            <p>
+                Sales agents and brokers help facilitate finance deals.
+            </p>
+        </field>
+    </record>
+
+    <!-- ACTION: Insurance Companies -->
+    <record id="action_finance_insurers" model="ir.actions.act_window">
+        <field name="name">Insurance Companies</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('finance_partner_type', '=', 'insurer')]</field>
+        <field name="context">{'default_finance_partner_type': 'insurer', 'default_is_company': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Insurance Company
+            </p>
+            <p>
+                Insurance companies provide coverage for financed assets.
+            </p>
+        </field>
+    </record>
+
+    <!-- ACTION: Finance Companies -->
+    <record id="action_finance_companies" model="ir.actions.act_window">
+        <field name="name">Finance Companies</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('finance_partner_type', '=', 'finance_company')]</field>
+        <field name="context">{'default_finance_partner_type': 'finance_company', 'default_is_company': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Finance Company
+            </p>
+            <p>
+                Finance companies provide the funding for finance contracts.
+            </p>
+        </field>
+    </record>
+
+    <!-- ACTION: Suppliers/Dealers -->
+    <record id="action_finance_suppliers" model="ir.actions.act_window">
+        <field name="name">Suppliers / Dealers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('finance_partner_type', '=', 'supplier')]</field>
+        <field name="context">{'default_finance_partner_type': 'supplier', 'default_is_company': True, 'default_supplier_rank': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Supplier / Dealer
+            </p>
+            <p>
+                Suppliers and dealers provide the assets for finance contracts.
+            </p>
+        </field>
+    </record>
+
+    <!-- MENU STRUCTURE -->
+    <menuitem id="menu_finance_partners_root"
+              name="Partners"
+              parent="menu_finance_root"
+              sequence="20"/>
+
+    <menuitem id="menu_finance_customers"
+              name="Customers"
+              parent="menu_finance_partners_root"
+              action="action_finance_customers"
+              sequence="10"/>
+
+    <menuitem id="menu_finance_brokers"
+              name="Sales Agents / Brokers"
+              parent="menu_finance_partners_root"
+              action="action_finance_brokers"
+              sequence="30"/>
+
+    <menuitem id="menu_finance_insurers"
+              name="Insurance Companies"
+              parent="menu_finance_partners_root"
+              action="action_finance_insurers"
+              sequence="40"/>
+
+    <menuitem id="menu_finance_companies"
+              name="Finance Companies"
+              parent="menu_finance_partners_root"
+              action="action_finance_companies"
+              sequence="50"/>
+
+    <menuitem id="menu_finance_suppliers"
+              name="Suppliers / Dealers"
+              parent="menu_finance_partners_root"
+              action="action_finance_suppliers"
+              sequence="60"/>
+
+</odoo>

@@ -7,7 +7,8 @@ class FinanceContractGuarantor(models.Model):
 
     contract_id = fields.Many2one('finance.contract', string="Contract", ondelete='cascade')
     partner_id = fields.Many2one('res.partner', string="Guarantor Name", required=True,
-                                 domain="[('is_finance_guarantor', '=', True)]")
+                                 domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
+                                 help="Select an individual or company to act as guarantor (not a broker/insurer/finance company/supplier).")
 
     # --- 1. Pull Details from res.partner ---
     nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
@@ -41,7 +42,8 @@ class FinanceContractJointHirer(models.Model):
 
     contract_id = fields.Many2one('finance.contract', string="Contract", ondelete='cascade')
     partner_id = fields.Many2one('res.partner', string="Co-Borrower Name", required=True,
-                                 domain="[('is_finance_joint_hirer', '=', True)]")
+                                 domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
+                                 help="Select an individual or company to act as co-borrower (not a broker/insurer/finance company/supplier).")
 
     # --- Pull Details from res.partner ---
     nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
@@ -66,6 +68,24 @@ class FinanceContract(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, 
                         default=lambda self: self.env.company, index=True)
 
+    # 1. APPLICATION TYPE (HP/Floor Stock)
+    application_type = fields.Selection([
+        ('hp', 'Hire Purchase'),
+        ('floor_stock', 'Floor Stock'),
+        ('lease', 'Leasing'),
+        ('other', 'Other')
+    ], string="Application Type", default='hp', required=True)
+    
+    # 2. SALESPERSON (External Agent/Client)
+    #   "Select from Client", implying this is an external partner/broker
+    sales_agent_id = fields.Many2one('res.partner', string="Salesperson (Agent)",
+                                     domain="[('finance_partner_type', '=', 'broker'), ('active', '=', True)]",
+                                     help="The external salesperson or broker associated with this deal.")
+    
+    # 3. INSURER
+    insurer_id = fields.Many2one('res.partner', string="Insurer",
+                                 domain="[('finance_partner_type', '=', 'insurer')]")
+    
     # --- Header Info ---
     hp_ac_no = fields.Char(string="HP A/C No.")
 
@@ -81,13 +101,23 @@ class FinanceContract(models.Model):
     asset_model = fields.Char(related='asset_id.vehicle_id.model_id.name', string="Model", store=True)
     asset_type = fields.Selection(related='asset_id.asset_type', string="Asset Type", store=True)
 
-    hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True, tracking=True)
+    asset_condition = fields.Selection([
+        ('new', 'New'),
+        ('used', 'Used'),
+        ('demo', 'Demonstrator')
+    ], string="Asset Condition", required=True, default='new')
+
+
+    hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True, tracking=True,
+                               domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
+                               help="Select the individual or company hiring the asset (not a broker/insurer/finance company/supplier).")
     ic_no = fields.Char(related='hirer_id.vat', string="ID / IC No.", readonly=False)
 
     agreement_date = fields.Date(string="Agreement Date", default=fields.Date.context_today)
     agreement_no = fields.Char(string="Agreement No", required=True, copy=False, default='New')
 
-    finance_company_id = fields.Many2one('res.partner', string="Finance Name")
+    finance_company_id = fields.Many2one('res.partner', string="Finance Name",
+                                         domain="[('finance_partner_type', '=', 'finance_company')]")
     submit_date = fields.Date(string="Submit Date")
     entry_date = fields.Date(string="Entry Date", default=fields.Date.context_today)
     inst_day = fields.Integer(string="Inst. Day (1-31)")
@@ -121,12 +151,24 @@ class FinanceContract(models.Model):
         ('annuity', 'Annuity/Standard')
     ], string="Installment Type")
 
+    installment_pattern = fields.Selection([
+        ('normal', 'Normal'),
+        ('front', 'Front Loaded'),
+        ('average', 'Average')
+    ], string="Instalment Pattern", default='normal')
+
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
     # --- Financials ---
     is_hp_act = fields.Boolean(string="HP Act (<$55k)", compute='_compute_hp_act', store=True,
                                help="Automatically checked if Loan Amount is $55,000 or less.")
 
+    interest_type = fields.Selection([
+        ('flat', 'Flat Rate'),
+        ('effective', 'Effective Rate') 
+    ], string="Interest Type", default='flat', 
+       help="Effective Rate usually implies standard amortization/annuity.")
+    
     interest_method = fields.Selection([
         ('flat', 'Flat Rate (Straight Line)'),
         ('rule78', 'Rule of 78 (Sum of Digits)')
@@ -160,7 +202,8 @@ class FinanceContract(models.Model):
     mileage_limit = fields.Integer(string="Annual Mileage Limit (km)")
     excess_mileage_rate = fields.Monetary(string="Excess Mileage Rate")
 
-    supplier_id = fields.Many2one('res.partner', string="Supplier / Dealer", domain="[('supplier_rank', '>', 0)]")
+    supplier_id = fields.Many2one('res.partner', string="Supplier / Dealer",
+                                  domain="[('finance_partner_type', '=', 'supplier')]")
     supplier_code = fields.Char(related='supplier_id.ref', string="Supplier Code", readonly=False)
     commission = fields.Monetary(string="Commission")
 
@@ -251,6 +294,14 @@ class FinanceContract(models.Model):
             else:
                 rec.maturity_date = False
 
+    @api.onchange('interest_type')
+    def _onchange_interest_type(self):
+        """Map CSV Interest Type to Internal Calculation Method"""
+        if self.interest_type == 'flat':
+            self.interest_method = 'flat' # Uses existing logic
+        elif self.interest_type == 'effective':
+            self.installment_type = 'annuity' # Uses standard amortization
+            
     @api.onchange('product_id')
     def _onchange_product(self):
         if self.product_id:
