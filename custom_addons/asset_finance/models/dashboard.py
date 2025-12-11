@@ -88,13 +88,16 @@ class FinanceDashboard(models.Model):
         """Optimized KPI computation using direct SQL queries"""
         for rec in self:
             # Use SQL for better performance - avoids loading all records into memory
+            # Note: balance_installment = balance_hire - total_inst_paid (computed field)
+            # Note: os_balance = balance_installment (computed field)
+            # We calculate these directly in SQL using stored fields
             self.env.cr.execute("""
                 SELECT
                     COUNT(*) as contract_count,
-                    COALESCE(SUM(os_balance), 0) as portfolio_value,
+                    COALESCE(SUM(balance_hire - total_inst_paid), 0) as portfolio_value,
                     COALESCE(SUM(accrued_penalty), 0) as total_penalties,
-                    COALESCE(SUM(balance_installment), 0) as total_outstanding,
-                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 THEN balance_installment ELSE 0 END), 0) as total_overdue
+                    COALESCE(SUM(balance_hire - total_inst_paid), 0) as total_outstanding,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as total_overdue
                 FROM finance_contract
                 WHERE ac_status = 'active'
             """)
@@ -145,13 +148,15 @@ class FinanceDashboard(models.Model):
         """Optimized aging computation using SQL queries"""
         for rec in self:
             # Use SQL to compute aging buckets in a single query
+            # Note: balance_installment = balance_hire - total_inst_paid (computed field)
+            # We calculate it directly in SQL using stored fields
             self.env.cr.execute("""
                 SELECT
-                    COALESCE(SUM(CASE WHEN total_overdue_days = 0 THEN balance_installment ELSE 0 END), 0) as current,
-                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 AND total_overdue_days <= 30 THEN balance_installment ELSE 0 END), 0) as overdue_1_30,
-                    COALESCE(SUM(CASE WHEN total_overdue_days > 30 AND total_overdue_days <= 60 THEN balance_installment ELSE 0 END), 0) as overdue_31_60,
-                    COALESCE(SUM(CASE WHEN total_overdue_days > 60 AND total_overdue_days <= 90 THEN balance_installment ELSE 0 END), 0) as overdue_61_90,
-                    COALESCE(SUM(CASE WHEN total_overdue_days > 90 THEN balance_installment ELSE 0 END), 0) as overdue_90_plus
+                    COALESCE(SUM(CASE WHEN total_overdue_days = 0 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as current,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 0 AND total_overdue_days <= 30 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as overdue_1_30,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 30 AND total_overdue_days <= 60 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as overdue_31_60,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 60 AND total_overdue_days <= 90 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as overdue_61_90,
+                    COALESCE(SUM(CASE WHEN total_overdue_days > 90 THEN (balance_hire - total_inst_paid) ELSE 0 END), 0) as overdue_90_plus
                 FROM finance_contract
                 WHERE ac_status = 'active'
             """)

@@ -238,27 +238,11 @@
         </field>
     </record>
 
-    <record id="view_finance_dashboard_kanban" model="ir.ui.view">
-        <field name="name">finance.dashboard.kanban</field>
-        <field name="model">finance.dashboard</field>
-        <field name="arch" type="xml">
-            <kanban class="o_kanban_dashboard" create="false" edit="false" delete="false">
-               <field name="id"/>
-               <field name="currency_id"/>
-               <field name="chart_data_json"/>
-               <templates>
-                    <t t-name="card">
-                        </t>
-               </templates>
-            </kanban>
-        </field>
-    </record>
-
     <record id="action_finance_dashboard" model="ir.actions.act_window">
         <field name="name">Dashboard</field>
         <field name="res_model">finance.dashboard</field>
         <field name="view_mode">kanban</field>
-        <field name="res_id">1</field> 
+        <field name="res_id">1</field>
         <field name="target">current</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
