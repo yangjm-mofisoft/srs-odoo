@@ -1,0 +1,8 @@
+1. Open Powershell
+2. Run command to create test users. Password for all test users is test123
+	
+	Get-Content setup_test_users_fixed.py | docker-compose exec -T web python3 /opt/odoo/odoo-bin shell -c /etc/odoo/odoo.conf -d vfs
+
+3. Run command to assign user groups:  
+
+   Get-Content assign_test_user_groups.py | docker-compose exec -T web python3 /opt/odoo/odoo-bin shell -c /etc/odoo/odoo.conf -d vfs

@@ -9,6 +9,7 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/sequence.xml',
+        #'data/test_users_data.xml',  # For testing user setup. Remove in production.
         'data/cron.xml',
         'data/finance_term_data.xml',
         'data/account_chart_data.xml',

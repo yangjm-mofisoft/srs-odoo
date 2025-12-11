@@ -18,6 +18,28 @@ def run_setup(env):
     
     print(f"Using Company: {company.name} (ID: {company.id})")
 
+    User = env['res.users'].sudo()
+
+    # --- CREATE TEST USERS FOR GROUPS ---
+    def create_test_user(name, login):
+        user = User.search([('login', '=', login)], limit=1)
+        if not user:
+            user = User.create({
+                'name': name,
+                'login': login,
+                'password': login, # Password same as login for testing
+                'email': f"{login}@test.com",
+                'company_id': company.id,
+                'company_ids': [(6, 0, [company.id])]
+            })
+            print(f"Created User: {name} ({login})")
+        return user
+
+    create_test_user('Finance Manager', 'finance.manager')
+    create_test_user('Finance Officer', 'finance.officer')
+    create_test_user('Collection Staff', 'collection.staff')
+    create_test_user('Super Finance User', 'finance.all')
+
     # 2. SETUP CHART OF ACCOUNTS
     def get_or_create_account(code, name, type_key):
         Account = env['account.account'].sudo()
@@ -57,6 +79,7 @@ def run_setup(env):
     # 3. SETUP MASTER DATA (Partners & Asset)
     Partner = env['res.partner'].sudo()
     
+
     # Dealer
     dealer_partner = Partner.search([('name', '=', 'Super Cars Dealership')], limit=1)
     if not dealer_partner:
