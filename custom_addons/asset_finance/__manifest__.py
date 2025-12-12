@@ -1,6 +1,6 @@
 {
     'name': 'Asset Financing Management',
-    'version': '1.0.3',
+    'version': '1.0.4',
     'category': 'Accounting/Leasing',
     'summary': 'Manage Asset Financing, HP, and Leasing Contracts',
     'author': 'Mofisoft PTE. LTD.',
