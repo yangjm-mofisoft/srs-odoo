@@ -23,8 +23,14 @@ Payment = env['account.payment']
 
 # --- HELPER: Find required accounts/journals (Adjust codes/names as per your COA) ---
 company = env.company
-sales_journal = Journal.search([('type', '=', 'sale'), ('company_id', '=', company.id)], limit=1)
-bank_journal = Journal.search([('type', '=', 'bank'), ('company_id', '=', company.id)], limit=1)
+# Search for journals - handle cases where company_id might not be filterable
+try:
+    sales_journal = Journal.search([('type', '=', 'sale'), ('company_id', '=', company.id)], limit=1)
+    bank_journal = Journal.search([('type', '=', 'bank'), ('company_id', '=', company.id)], limit=1)
+except:
+    # Fallback without company filter
+    sales_journal = Journal.search([('type', '=', 'sale')], limit=1)
+    bank_journal = Journal.search([('type', '=', 'bank')], limit=1)
 
 if not sales_journal:
     raise Exception("No Sales Journal found! Please create one first.")
@@ -33,10 +39,15 @@ if not bank_journal:
 
 # Try to find standard accounts, fallback to creating simple ones if needed
 def get_or_create_account(code, name, type_code):
-    acc = Account.search([('code', '=', code), ('company_id', '=', company.id)], limit=1)
-    if not acc:
-        # Fallback search by type if specific code not found
-        acc = Account.search([('account_type', '=', type_code), ('company_id', '=', company.id)], limit=1)
+    # First try to search by code only (company_id might not exist in some COAs)
+    try:
+        acc = Account.search([('code', '=', code)], limit=1)
+        if not acc:
+            # Fallback search by type only
+            acc = Account.search([('account_type', '=', type_code)], limit=1)
+    except:
+        # If search fails, try without company filter
+        acc = Account.search([('account_type', '=', type_code)], limit=1)
     return acc
 
 asset_account = get_or_create_account('101200', 'Hire Purchase Debtors', 'asset_receivable')
