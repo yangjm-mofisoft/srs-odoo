@@ -50,11 +50,12 @@ def get_or_create_account(code, name, type_code):
         acc = Account.search([('account_type', '=', type_code)], limit=1)
     return acc
 
-asset_account = get_or_create_account('101200', 'Hire Purchase Debtors', 'asset_receivable')
-income_account = get_or_create_account('400000', 'Interest Income', 'income')
-unearned_account = get_or_create_account('201000', 'Unearned Interest', 'liability_current')
-admin_fee_account = get_or_create_account('400100', 'Admin Fee Income', 'income')
-penalty_account = get_or_create_account('400200', 'Penalty Income', 'income')
+# Use account codes from custom_addons/asset_finance/data/account_chart_data.xml
+asset_account = get_or_create_account('2002', 'Hire Purchase Debtors - Principal + Interest', 'asset_receivable')
+income_account = get_or_create_account('5001', 'Hire Purchase Interest Income', 'income')
+unearned_account = get_or_create_account('2003', 'Hire Purchase Debtors - Unearned Interest', 'asset_current')
+admin_fee_account = get_or_create_account('5002', 'Hire Purchase Processing Fee', 'income')
+penalty_account = get_or_create_account('5003', 'Hire Purchase Late Charges & Interest', 'income')
 
 if not (asset_account and income_account and unearned_account):
     raise Exception("Missing required accounts (Asset/Income/Liability). Please ensure Chart of Accounts is installed.")

@@ -1,6 +1,6 @@
 {
     'name': 'Asset Financing Management',
-    'version': '1.0.4',
+    'version': '1.0.5',
     'category': 'Accounting/Leasing',
     'summary': 'Manage Asset Financing, HP, and Leasing Contracts',
     'author': 'Mofisoft PTE. LTD.',
@@ -13,6 +13,7 @@
         'data/cron.xml',
         'data/finance_term_data.xml',
         'data/account_chart_data.xml',
+        'data/account_config_data.xml',
         'data/mail_templates.xml',
 
         # --- 1. DEFINE ACTIONS FIRST ---
@@ -23,6 +24,8 @@
         'views/res_partner_views.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
+        'views/account_config_views.xml',
+        'views/fleet_vehicle_views.xml',
         'views/contract_views.xml',
         'wizard/settlement_views.xml',
         'wizard/disbursement_wizard_views.xml',

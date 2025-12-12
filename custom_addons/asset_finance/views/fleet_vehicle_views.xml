@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Simplified Fleet Vehicle Form View for Asset Finance -->
+    <record id="view_fleet_vehicle_form_simplified" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.simplified</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="priority">1</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle">
+                <sheet>
+                    <group>
+                        <group string="Vehicle Information">
+                            <field name="model_id" required="1"/>
+                            <field name="license_plate" required="1"/>
+                            <field name="vin_sn"/>
+                            <field name="model_year"/>
+                            <field name="year_manufacture"/>
+                            <field name="color"/>
+                            <field name="vehicle_condition"/>
+                        </group>
+                        <group string="Engine &amp; Specifications">
+                            <field name="engine_no"/>
+                            <field name="engine_capacity"/>
+                            <field name="horsepower"/>
+                            <field name="power"/>
+                            <field name="transmission"/>
+                            <field name="fuel_type"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Additional Details">
+                            <field name="seats"/>
+                            <field name="doors"/>
+                            <field name="horsepower_tax"/>
+                        </group>
+                        <group string="Emissions">
+                            <field name="co2"/>
+                            <field name="co2_standard"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Inherit existing form to hide unwanted fields -->
+    <record id="view_fleet_vehicle_form_inherit_asset_finance" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.inherit.asset.finance</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Hide driver_id field if it exists -->
+            <xpath expr="//field[@name='driver_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Hide future_driver_id field if it exists -->
+            <xpath expr="//field[@name='future_driver_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Hide manager_id field if it exists -->
+            <xpath expr="//field[@name='manager_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Hide location field if it exists -->
+            <xpath expr="//field[@name='location']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Hide odometer field if it exists -->
+            <xpath expr="//field[@name='odometer']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Hide odometer_unit field if it exists -->
+            <xpath expr="//field[@name='odometer_unit']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

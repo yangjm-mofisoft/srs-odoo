@@ -55,7 +55,7 @@
                         <page string="Vehicle Details" invisible="asset_type != 'vehicle'">
                             <group>
                                 <group string="Registration Info">
-                                    <field name="chassis_no" readonly="vehicle_id != False" force_save="1"/>
+                                    <field name="chassis_no"/>
                                     <field name="engine_no"/>
                                     <field name="engine_capacity"/>
                                     <field name="year_manufacture"/>

@@ -2,12 +2,14 @@ from . import master
 from . import term
 from . import asset
 from . import asset_sg
+from . import fleet_vehicle
 from . import contract
 from . import contract_financial
 from . import contract_collection
 from . import contract_accounting
 from . import contract_line
 from . import account_payment
+from . import account_config
 from . import product
 from . import res_partner
 from . import res_partner_phone

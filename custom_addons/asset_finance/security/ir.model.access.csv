@@ -49,3 +49,5 @@ access_finance_report_interest_collection,finance.report.interest.collection,mod
 access_finance_report_portfolio_officer,finance.report.portfolio.officer,model_finance_report_portfolio,group_finance_officer,1,0,0,0
 access_finance_report_portfolio_manager,finance.report.portfolio.manager,model_finance_report_portfolio,group_finance_manager,1,0,0,0
 access_finance_report_portfolio_collection,finance.report.portfolio.collection,model_finance_report_portfolio,group_collection_staff,1,0,0,0
+access_finance_account_config_officer,finance.account.config.officer,model_finance_account_config,group_finance_officer,1,0,0,0
+access_finance_account_config_manager,finance.account.config.manager,model_finance_account_config,group_finance_manager,1,1,1,1

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Default Finance Account Configuration -->
+        <!-- This will auto-map to accounts defined in account_chart_data.xml -->
+        <record id="default_finance_account_config" model="finance.account.config">
+            <field name="company_id" ref="base.main_company"/>
+
+            <!-- Asset Accounts -->
+            <field name="hp_debtors_account_id" ref="account_hp_debtors_principal"/>
+            <field name="unearned_interest_account_id" ref="account_hp_debtors_unearned"/>
+            <field name="hp_charges_account_id" ref="account_hp_debtors_charges"/>
+            <field name="installment_contra_account_id" ref="account_hp_debtors_contra"/>
+
+            <!-- Income Accounts -->
+            <field name="interest_income_account_id" ref="account_hp_interest_income"/>
+            <field name="processing_fee_income_account_id" ref="account_hp_processing_fee"/>
+            <field name="late_charges_income_account_id" ref="account_hp_late_charges"/>
+            <field name="early_settlement_income_account_id" ref="account_hp_early_settlement"/>
+
+            <!-- Tax Accounts -->
+            <field name="gst_output_account_id" ref="account_gst_output"/>
+
+            <!-- Expense Accounts (Optional) -->
+            <field name="block_interest_expense_account_id" ref="account_block_interest_expense"/>
+            <field name="repo_expense_account_id" ref="account_hp_repo_expense"/>
+            <field name="bank_charges_account_id" ref="account_bank_charges"/>
+        </record>
+
+    </data>
+</odoo>

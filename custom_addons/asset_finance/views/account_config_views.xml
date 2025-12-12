@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Finance Account Configuration Form View -->
+    <record id="view_finance_account_config_form" model="ir.ui.view">
+        <field name="name">finance.account.config.form</field>
+        <field name="model">finance.account.config</field>
+        <field name="arch" type="xml">
+            <form string="Finance Account Configuration">
+                <header>
+                    <button name="action_auto_configure_from_coa" string="Auto-Configure from COA"
+                            type="object" class="btn-primary"
+                            help="Automatically find and configure accounts based on standard account codes"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="company_id" options="{'no_create': True, 'no_open': True}"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Asset Accounts" name="asset_accounts">
+                            <field name="hp_debtors_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'asset_receivable'}"/>
+                            <field name="unearned_interest_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'asset_current'}"/>
+                            <field name="hp_charges_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'asset_receivable'}"/>
+                            <field name="installment_contra_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'asset_current'}"/>
+                        </group>
+
+                        <group string="Income Accounts" name="income_accounts">
+                            <field name="interest_income_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'income'}"/>
+                            <field name="processing_fee_income_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'income'}"/>
+                            <field name="late_charges_income_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'income'}"/>
+                            <field name="early_settlement_income_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'income'}"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Tax Accounts" name="tax_accounts">
+                            <field name="gst_output_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'liability_current'}"/>
+                        </group>
+
+                        <group string="Expense Accounts (Optional)" name="expense_accounts">
+                            <field name="block_interest_expense_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'expense_direct_cost'}"/>
+                            <field name="repo_expense_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'expense_direct_cost'}"/>
+                            <field name="bank_charges_account_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_account_type': 'expense'}"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Account Mapping Guide" name="guide">
+                            <group>
+                                <group string="Standard Account Codes (Reference)">
+                                    <div>
+                                        <h4>Asset Accounts (2000 Series)</h4>
+                                        <p>• 2002 - HP Debtors (Principal + Interest)</p>
+                                        <p>• 2003 - HP Debtors (Unearned Interest)</p>
+                                        <p>• 2004 - HP Debtors (Other Charges)</p>
+                                        <p>• 2005 - HP Debtors (Installment Contra)</p>
+                                    </div>
+                                </group>
+
+                                <group string="">
+                                    <div>
+                                        <h4>Income Accounts (5000 Series)</h4>
+                                        <p>• 5001 - HP Interest Income</p>
+                                        <p>• 5002 - HP Processing Fee</p>
+                                        <p>• 5003 - HP Late Charges</p>
+                                        <p>• 5004 - HP Early Settlement Fee</p>
+                                    </div>
+                                </group>
+                            </group>
+
+                            <group>
+                                <div class="alert alert-info">
+                                    <h4>Usage Notes</h4>
+                                    <p><strong>Important:</strong> Map these functional account types to your actual Chart of Accounts.</p>
+                                    <p>Your accounts may have different codes than the reference codes shown above.</p>
+                                    <p>Click <strong>"Auto-Configure from COA"</strong> to automatically map accounts if they use standard codes.</p>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Finance Account Configuration List View -->
+    <record id="view_finance_account_config_list" model="ir.ui.view">
+        <field name="name">finance.account.config.list</field>
+        <field name="model">finance.account.config</field>
+        <field name="arch" type="xml">
+            <list string="Finance Account Configurations" create="true" delete="true">
+                <field name="company_id"/>
+                <field name="hp_debtors_account_id"/>
+                <field name="unearned_interest_account_id"/>
+                <field name="processing_fee_income_account_id"/>
+                <field name="gst_output_account_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Finance Account Configuration Action -->
+    <record id="action_finance_account_config" model="ir.actions.act_window">
+        <field name="name">Account Mapping</field>
+        <field name="res_model">finance.account.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Finance Account Mapping
+            </p>
+            <p>
+                Map functional account types (HP Debtors, Interest Income, etc.)
+                to your actual Chart of Accounts.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item under Finance > Configuration -->
+    <menuitem id="menu_finance_account_config"
+              name="Account Mapping"
+              parent="menu_finance_config"
+              action="action_finance_account_config"
+              sequence="5"/>
+
+</odoo>

@@ -54,9 +54,18 @@ class FinanceDisbursementWizard(models.TransientModel):
     def action_confirm_disbursement(self):
         self.ensure_one()
         contract = self.contract_id
-        
+
         if not contract.asset_account_id or not contract.unearned_interest_account_id:
             raise UserError("Please configure the Asset and Unearned Interest accounts on the Contract.")
+
+        # Get account configuration
+        try:
+            account_config = self.env['finance.account.config'].get_config()
+        except UserError:
+            raise UserError(
+                "Finance Account Configuration not found. "
+                "Please configure account mapping under Finance > Configuration > Account Mapping."
+            )
 
         move_lines = []
         name = f"Disbursement for {contract.agreement_no}"
@@ -78,29 +87,58 @@ class FinanceDisbursementWizard(models.TransientModel):
             'credit': self.amount_interest,
         }))
 
-        # 3. CREDIT: Processing Fee Income (Deduction)
-        if self.processing_fee > 0:
-            # Fallback to contract Income account if specific fee account is missing
-            fee_account = contract.income_account_id.id
+        # 3. DEBIT: HP Debtors - Others Charges (for Processing Fee + GST)
+        # This creates an AR for the processing fee that offsets the net payout
+        if self.processing_fee > 0 or self.processing_fee_tax > 0:
+            # Use configured HP Charges account
+            if not account_config.hp_charges_account_id:
+                raise UserError(
+                    "HP Charges account not configured. "
+                    "Please configure it under Finance > Configuration > Account Mapping."
+                )
+
+            total_charges = self.processing_fee + self.processing_fee_tax
             move_lines.append((0, 0, {
-                'name': "Processing Fee",
-                'account_id': fee_account,
+                'name': "Processing Fee + GST (AR)",
+                'account_id': account_config.hp_charges_account_id.id,
+                'debit': total_charges,
+                'credit': 0.0,
+                'partner_id': contract.hirer_id.id,
+            }))
+
+        # 4. CREDIT: Processing Fee Income
+        if self.processing_fee > 0:
+            # Use configured Processing Fee Income account
+            if not account_config.processing_fee_income_account_id:
+                raise UserError(
+                    "Processing Fee Income account not configured. "
+                    "Please configure it under Finance > Configuration > Account Mapping."
+                )
+
+            move_lines.append((0, 0, {
+                'name': "Hire Purchase Processing Fee",
+                'account_id': account_config.processing_fee_income_account_id.id,
                 'debit': 0.0,
                 'credit': self.processing_fee,
             }))
 
-        # 4. CREDIT: GST Output (Deduction)
+        # 5. CREDIT: GST Output Tax
         if self.processing_fee_tax > 0:
-            # Find a default tax account or use system default
-            # For simplicity using income account, but should be tax payable
+            # Use configured GST Output account
+            if not account_config.gst_output_account_id:
+                raise UserError(
+                    "GST Output Tax account not configured. "
+                    "Please configure it under Finance > Configuration > Account Mapping."
+                )
+
             move_lines.append((0, 0, {
                 'name': "GST on Processing Fee",
-                'account_id': contract.income_account_id.id, # Ideally separate tax account
+                'account_id': account_config.gst_output_account_id.id,
                 'debit': 0.0,
                 'credit': self.processing_fee_tax,
             }))
 
-        # 5. CREDIT: Bank (Net Payout)
+        # 6. CREDIT: Bank (Net Payout)
         if self.amount_net > 0:
             if not self.journal_id.default_account_id:
                 raise UserError(f"Journal {self.journal_id.name} has no default account.")

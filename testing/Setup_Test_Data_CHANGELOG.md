@@ -1,5 +1,68 @@
 # Test Data Script - Fixes Changelog
 
+## Version 8 - Custom Chart of Accounts Integration (2025-12-12)
+
+### Issue Fixed
+
+**Problem:** Test data script was using generic account codes that don't match the custom Chart of Accounts defined in `data/account_chart_data.xml`.
+
+**Root Cause:** The script was hardcoded to look for account codes like `101200`, `400000`, `201000` which are from a different COA template, not the Asset Finance module's custom chart.
+
+### Changes Made
+
+Updated account code mappings to use the Asset Finance module's custom COA:
+
+**Before (WRONG CODES):**
+```python
+asset_account = get_or_create_account('101200', 'Hire Purchase Debtors', 'asset_receivable')  # Wrong!
+income_account = get_or_create_account('400000', 'Interest Income', 'income')  # Wrong!
+unearned_account = get_or_create_account('201000', 'Unearned Interest', 'liability_current')  # Wrong!
+admin_fee_account = get_or_create_account('400100', 'Admin Fee Income', 'income')  # Wrong!
+penalty_account = get_or_create_account('400200', 'Penalty Income', 'income')  # Wrong!
+```
+
+**After (CORRECT CODES):**
+```python
+# Use account codes from custom_addons/asset_finance/data/account_chart_data.xml
+asset_account = get_or_create_account('2002', 'Hire Purchase Debtors - Principal + Interest', 'asset_receivable')
+income_account = get_or_create_account('5001', 'Hire Purchase Interest Income', 'income')
+unearned_account = get_or_create_account('2003', 'Hire Purchase Debtors - Unearned Interest', 'asset_current')
+admin_fee_account = get_or_create_account('5002', 'Hire Purchase Processing Fee', 'income')
+penalty_account = get_or_create_account('5003', 'Hire Purchase Late Charges & Interest', 'income')
+```
+
+### Account Mapping Reference
+
+| Purpose | Account Code | Account Name | Type |
+|---------|--------------|--------------|------|
+| **HP Debtors (Asset)** | 2002 | Hire Purchase Debtors - Principal + Interest | asset_receivable |
+| **Unearned Interest** | 2003 | HP Debtors - Unearned Interest | asset_current |
+| **Interest Income** | 5001 | Hire Purchase Interest Income | income |
+| **Processing Fee Income** | 5002 | Hire Purchase Processing Fee | income |
+| **Late Charges Income** | 5003 | HP Late Charges & Interest | income |
+| **Bank Account** | 2001 | Mbb bank | asset_cash |
+| **GST Output** | 6004 | Gst Output tax | liability_current |
+
+### Bank Journal Configuration
+
+The disbursement form's "Bank Journal" dropdown (line 9 of `disbursement_wizard.py`) filters journals with:
+```python
+domain=[('type', 'in', ['bank', 'cash'])]
+```
+
+Your custom COA already includes:
+- **MBB Bank Journal** (code: MBB, account: 2001)
+- **Petty Cash Journal** (code: CSH)
+
+### Results
+✅ Test data now uses correct account codes from your custom COA
+✅ Contracts will be created with proper account mappings
+✅ Disbursement journal entries will use account 2002 for HP Debtors
+✅ Bank journal will correctly use account 2001 (MBB Bank)
+✅ All accounting entries will align with your COA structure
+
+---
+
 ## Version 7 - Business Partners Integration (2025-12-12)
 
 ### Enhancement Added
