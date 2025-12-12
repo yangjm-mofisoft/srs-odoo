@@ -21,7 +21,6 @@
         'views/asset_sg_views.xml',
         # 'views/res_partner_contact_views.xml', # Security for new model
         'views/res_partner_views.xml',
-        'views/partner_menus.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
         'views/contract_views.xml',
@@ -34,6 +33,7 @@
         'views/menu_views.xml',  # Creates 'menu_finance_config'
 
         # --- 3. ADD ITEMS TO THAT STRUCTURE ---
+        'views/partner_menus.xml',
         'views/access_rights_views.xml',       # Adds 'Security' to 'menu_finance_config'
         'views/res_config_settings_views.xml', # Adds 'Settings' to 'menu_finance_config'
         
