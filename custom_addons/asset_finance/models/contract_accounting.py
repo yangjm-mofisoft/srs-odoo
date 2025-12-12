@@ -84,8 +84,8 @@ class FinanceContract(models.Model):
         # 4. Debit: Admin Fee (if any)
         if self.admin_fee > 0:
             # Use a configured expense account for admin fees
-            admin_fee_account = self.env['ir.config_parameter'].sudo().get_param(
-                'asset_finance.admin_fee_account_id')
+            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.admin_fee_account_id')], limit=1)
+            admin_fee_account = param.value if param else False
             if admin_fee_account:
                 line_items.append((0, 0, {
                     'name': f'Admin Fee - {self.agreement_no}',
@@ -215,8 +215,8 @@ class FinanceContract(models.Model):
 
         # 5. Credit: Penalty Account (if penalties outstanding)
         if settlement_info['balance_late_charges'] > 0:
-            penalty_account = self.env['ir.config_parameter'].sudo().get_param(
-                'asset_finance.penalty_income_account_id')
+            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.penalty_income_account_id')], limit=1)
+            penalty_account = param.value if param else False
             if penalty_account:
                 line_items.append((0, 0, {
                     'name': f'Settlement - Penalties - {self.agreement_no}',

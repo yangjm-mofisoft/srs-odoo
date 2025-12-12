@@ -313,9 +313,8 @@ class TestIntegration(AssetFinanceTestCommon):
         )
 
         # Retrieve configuration
-        hp_limit = float(self.env['ir.config_parameter'].sudo().get_param(
-            'asset_finance.hp_act_limit', default=55000.0
-        ))
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.hp_act_limit')], limit=1)
+        hp_limit = float(param.value) if param else 55000.0
 
         self.assertEqual(hp_limit, 60000.0, "Configuration should persist")
 

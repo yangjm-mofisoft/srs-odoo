@@ -225,8 +225,8 @@ class FinanceContract(models.Model):
         self.ensure_one()
 
         # Get configuration parameters
-        rebate_fee_pct = float(self.env['ir.config_parameter'].sudo().get_param(
-            'asset_finance.settlement_rebate_fee', default=20.0))
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.settlement_rebate_fee')], limit=1)
+        rebate_fee_pct = float(param.value) if param else 20.0
 
         # Find remaining unpaid installments
         remaining_lines = self.line_ids.filtered(

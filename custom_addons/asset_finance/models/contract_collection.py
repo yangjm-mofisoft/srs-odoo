@@ -14,8 +14,8 @@ class FinanceContract(models.Model):
         today = fields.Date.today()
 
         # Get grace period from configuration
-        grace_period = int(self.env['ir.config_parameter'].sudo().get_param(
-            'asset_finance.grace_period_days', default=7))
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.grace_period_days')], limit=1)
+        grace_period = int(param.value) if param else 7
 
         for rec in self:
             # Find the oldest unpaid line that is overdue

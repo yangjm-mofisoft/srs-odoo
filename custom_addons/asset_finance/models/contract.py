@@ -281,8 +281,12 @@ class FinanceContract(models.Model):
     def _compute_hp_act(self):
         """Determine if HP Act applies based on configurable limit"""
         for rec in self:
-            hp_limit = self.env['ir.config_parameter'].sudo().get_param('asset_finance.hp_act_limit', default=55000.0)
-            rec.is_hp_act = (rec.loan_amount <= float(hp_limit))
+            # FIX: Use search() to find the parameter record manually
+            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.hp_act_limit')], limit=1)
+            
+            # If param exists, use its value; otherwise use default 55000.0
+            hp_limit = float(param.value) if param else 55000.0            
+            rec.is_hp_act = (rec.loan_amount <= hp_limit)
 
     @api.depends('first_due_date', 'no_of_inst')
     def _compute_maturity_date(self):
