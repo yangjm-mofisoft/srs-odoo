@@ -130,5 +130,18 @@
             <field name="account_type">expense</field>
         </record>
 
+        <!-- Journals -->
+        <record id="journal_mbb_bank" model="account.journal">
+            <field name="name">MBB Bank</field>
+            <field name="type">bank</field>
+            <field name="code">MBB</field> <field name="currency_id" eval="ref('base.MYR')"/> <field name="default_account_id" ref="account_mbb_bank"/> 
+        </record>
+
+        <record id="journal_petty_cash" model="account.journal">
+            <field name="name">Petty Cash</field>
+            <field name="type">cash</field>
+            <field name="code">CSH</field>
+            </record>
+
     </data>
 </odoo>
