@@ -64,6 +64,13 @@
     <menuitem id="menu_finance_taxes" name="Taxes" parent="menu_finance_config" 
               action="account.action_tax_form" sequence="20" groups="account.group_account_manager"/>
 
+    <menuitem id="menu_finance_journals" 
+              name="Journals" 
+              parent="menu_finance_config" 
+              action="account.action_account_journal_form" 
+              sequence="15" 
+              groups="account.group_account_manager"/>
+
     <menuitem id="menu_finance_penalty_rules"
               name="Penalty Rules"
               parent="menu_finance_config"
