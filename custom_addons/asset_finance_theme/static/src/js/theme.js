@@ -1,12 +1,5 @@
 /** @odoo-module **/
 
-/**
- * Asset Finance - Modern Theme JavaScript
- * Handles theme interactions using Odoo's native lifecycle services.
- */
-
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 
 // ============================================================

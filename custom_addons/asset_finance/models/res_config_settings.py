@@ -118,12 +118,21 @@ class ResConfigSettings(models.TransientModel):
         super(ResConfigSettings, self).set_values()
 
         # Save Many2one field values to config parameters
-        # Use set_param which creates or updates the parameter
-        self.env['ir.config_parameter'].sudo().set_param(
-            'asset_finance.admin_fee_account_id',
-            str(self.admin_fee_account_id.id) if self.admin_fee_account_id else 'False'
-        )
-        self.env['ir.config_parameter'].sudo().set_param(
-            'asset_finance.penalty_income_account_id',
-            str(self.penalty_income_account_id.id) if self.penalty_income_account_id else 'False'
-        )
+        # In Odoo 19, use create/write directly instead of set_param
+        IrConfigParam = self.env['ir.config_parameter'].sudo()
+
+        # Admin fee account
+        param_admin = IrConfigParam.search([('key', '=', 'asset_finance.admin_fee_account_id')], limit=1)
+        value_admin = str(self.admin_fee_account_id.id) if self.admin_fee_account_id else 'False'
+        if param_admin:
+            param_admin.write({'value': value_admin})
+        else:
+            IrConfigParam.create({'key': 'asset_finance.admin_fee_account_id', 'value': value_admin})
+
+        # Penalty income account
+        param_penalty = IrConfigParam.search([('key', '=', 'asset_finance.penalty_income_account_id')], limit=1)
+        value_penalty = str(self.penalty_income_account_id.id) if self.penalty_income_account_id else 'False'
+        if param_penalty:
+            param_penalty.write({'value': value_penalty})
+        else:
+            IrConfigParam.create({'key': 'asset_finance.penalty_income_account_id', 'value': value_penalty})

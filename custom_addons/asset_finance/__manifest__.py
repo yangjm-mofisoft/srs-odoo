@@ -1,6 +1,6 @@
 {
     'name': 'Asset Financing Management',
-    'version': '1.0.0',
+    'version': '1.0.3',
     'category': 'Accounting/Leasing',
     'summary': 'Manage Asset Financing, HP, and Leasing Contracts',
     'author': 'Mofisoft PTE. LTD.',
@@ -33,6 +33,11 @@
         'reports/finance_reports.xml',
         'reports/finance_contract_template.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'asset_finance/static/src/scss/dashboard.scss',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

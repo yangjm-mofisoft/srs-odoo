@@ -1,6 +1,6 @@
 {
     'name': 'Asset Finance - Modern Theme',
-    'version': '1.1.0',
+    'version': '1.2.0',
     'category': 'Theme/Backend',
     'summary': 'Modern Bootstrap 5 Admin Theme for Asset Finance Module',
     'description': """
@@ -22,7 +22,7 @@
         'asset_finance',
     ],
     'data': [
-        'views/webclient_templates.xml',
+        'views/webclient_templates.xml', 
     ],
     'assets': {
         # 1. Variables must be loaded first to override Odoo defaults
