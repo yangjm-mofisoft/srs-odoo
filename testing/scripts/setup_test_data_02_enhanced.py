@@ -153,8 +153,114 @@ for name, email in comp_data:
 
 print(f"  ✓ Created {len(customers)} customers (7 individuals + 3 companies)\n")
 
-# --- 3. CREATE ASSETS ---
-print("3. Creating Assets...")
+# --- 2B. CREATE BUSINESS PARTNERS (Brokers, Insurers, Finance Companies, Suppliers) ---
+print("2B. Creating Business Partners...")
+
+# Sales Agents / Brokers
+brokers_data = [
+    ('Prime Auto Brokers Pte Ltd', 'sales@primeauto.sg', '67001111'),
+    ('Elite Finance Agents LLP', 'contact@elitefa.sg', '67002222'),
+    ('Quick Deal Brokers', 'info@quickdeal.sg', '67003333'),
+]
+
+brokers = []
+for name, email, phone in brokers_data:
+    b = Partner.create({
+        'name': name,
+        'is_company': True,
+        'email': email,
+        'phone': phone,
+        'street': '100 Robinson Road',
+        'city': 'Singapore',
+        'zip': '068899',
+        'country_id': env.ref('base.sg').id,
+        'finance_partner_type': 'broker',
+        'comment': 'Sales agent/broker for vehicle financing deals'
+    })
+    brokers.append(b)
+
+# Insurance Companies
+insurers_data = [
+    ('Great Eastern Insurance', 'corporate@greateasternsg.com', '68001111'),
+    ('AXA Insurance Singapore', 'business@axasg.com', '68002222'),
+    ('NTUC Income Insurance', 'corporate@income.com.sg', '68003333'),
+]
+
+insurers = []
+for name, email, phone in insurers_data:
+    i = Partner.create({
+        'name': name,
+        'is_company': True,
+        'email': email,
+        'phone': phone,
+        'street': '1 Raffles Place',
+        'city': 'Singapore',
+        'zip': '048616',
+        'country_id': env.ref('base.sg').id,
+        'finance_partner_type': 'insurer',
+        'comment': 'Insurance provider for financed vehicles'
+    })
+    insurers.append(i)
+
+# Finance Companies
+finance_cos_data = [
+    ('Hong Leong Finance Limited', 'enquiry@hlf.com.sg', '69001111'),
+    ('Sing Investments & Finance Ltd', 'info@sif.com.sg', '69002222'),
+    ('Orix Leasing Singapore Ltd', 'corporate@orix.com.sg', '69003333'),
+]
+
+finance_companies = []
+for name, email, phone in finance_cos_data:
+    f = Partner.create({
+        'name': name,
+        'is_company': True,
+        'email': email,
+        'phone': phone,
+        'street': '80 Raffles Place',
+        'city': 'Singapore',
+        'zip': '048624',
+        'country_id': env.ref('base.sg').id,
+        'finance_partner_type': 'finance_company',
+        'comment': 'External finance company partner'
+    })
+    finance_companies.append(f)
+
+# Suppliers / Dealers
+suppliers_data = [
+    ('Borneo Motors (Singapore) Pte Ltd', 'sales@borneomotors.com.sg', '65001111', 'Toyota dealer'),
+    ('Cycle & Carriage Industries', 'info@cyclecarriage.com.sg', '65002222', 'Mercedes-Benz dealer'),
+    ('Performance Motors Ltd', 'sales@performancemotors.com.sg', '65003333', 'BMW dealer'),
+    ('AutoHub Singapore Pte Ltd', 'sales@autohub.sg', '65004444', 'Multi-brand used cars'),
+    ('Prime Car Traders', 'contact@primecars.sg', '65005555', 'Pre-owned vehicle specialist'),
+]
+
+suppliers = []
+for name, email, phone, comment in suppliers_data:
+    s = Partner.create({
+        'name': name,
+        'is_company': True,
+        'email': email,
+        'phone': phone,
+        'street': '555 Bukit Timah Road',
+        'city': 'Singapore',
+        'zip': '269695',
+        'country_id': env.ref('base.sg').id,
+        'finance_partner_type': 'supplier',
+        'comment': comment
+    })
+    suppliers.append(s)
+
+print(f"  ✓ Created {len(brokers)} brokers/agents")
+print(f"  ✓ Created {len(insurers)} insurance companies")
+print(f"  ✓ Created {len(finance_companies)} finance companies")
+print(f"  ✓ Created {len(suppliers)} suppliers/dealers\n")
+
+# --- 3. CREATE FLEET VEHICLES AND ASSETS ---
+print("3. Creating Fleet Vehicles and Assets...")
+
+FleetVehicle = env['fleet.vehicle']
+FleetModel = env['fleet.vehicle.model']
+FleetBrand = env['fleet.vehicle.model.brand']
 
 vehicles_data = [
     ('Toyota Camry 2023', 'SGA1234A', 'Toyota', 'Camry', 100000, 'new'),
@@ -167,15 +273,34 @@ vehicles_data = [
 ]
 
 assets = []
-for name, reg, make, model, price, condition in vehicles_data:
+for name, reg, make_name, model_name, price, condition in vehicles_data:
+    # 1. Create or find brand
+    brand = FleetBrand.search([('name', '=', make_name)], limit=1)
+    if not brand:
+        brand = FleetBrand.create({'name': make_name})
+
+    # 2. Create or find model
+    model = FleetModel.search([('name', '=', model_name), ('brand_id', '=', brand.id)], limit=1)
+    if not model:
+        model = FleetModel.create({
+            'name': model_name,
+            'brand_id': brand.id,
+        })
+
+    # 3. Create fleet vehicle
+    vehicle = FleetVehicle.create({
+        'model_id': model.id,
+        'license_plate': reg,
+        'vin_sn': f"CHS-{reg}",  # VIN/Chassis number
+        'driver_id': False,  # No driver assigned yet
+    })
+
+    # 4. Create finance asset linked to fleet vehicle
     a = Asset.create({
         'name': name,
         'asset_type': 'vehicle',
         'status': 'available',
-        'registration_no': reg,
-        'make': make,
-        'model': model,
-        'chassis_no': f"CHS-{reg}",
+        'vehicle_id': vehicle.id,  # Link to fleet vehicle
         'engine_no': f"ENG-{reg}",
         'vehicle_condition': condition,
     })
@@ -208,6 +333,9 @@ c1 = Contract.create({
     'product_id': hp_product.id,
     'asset_id': assets[1].id,  # Honda Civic
     'hirer_id': customers[0].id,  # John Doe
+    'sales_agent_id': brokers[0].id,  # Prime Auto Brokers
+    'insurer_id': insurers[0].id,  # Great Eastern Insurance
+    'supplier_id': suppliers[0].id,  # Borneo Motors (Toyota dealer - for Honda we'd use another, but demo purposes)
     'agreement_date': date.today() - timedelta(days=60),  # 2 months old
     'first_due_date': date.today() - timedelta(days=30),
     'cash_price': 90000,
@@ -239,6 +367,9 @@ c2 = Contract.create({
     'product_id': hp_product.id,
     'asset_id': assets[2].id,  # Nissan
     'hirer_id': customers[7].id,  # Acme Logistics
+    'sales_agent_id': brokers[1].id,  # Elite Finance Agents
+    'insurer_id': insurers[1].id,  # AXA Insurance
+    'supplier_id': suppliers[3].id,  # AutoHub (multi-brand)
     'agreement_date': date.today() - timedelta(days=90),  # 3 months old
     'first_due_date': date.today() - timedelta(days=60),
     'cash_price': 60000,
@@ -266,6 +397,9 @@ c3 = Contract.create({
     'product_id': hp_product.id,
     'asset_id': assets[5].id,  # Toyota Vios
     'hirer_id': customers[3].id,  # Charlie Brown
+    'sales_agent_id': brokers[2].id,  # Quick Deal Brokers
+    'insurer_id': insurers[2].id,  # NTUC Income
+    'supplier_id': suppliers[4].id,  # Prime Car Traders (used car)
     'agreement_date': date.today() - timedelta(days=30),
     'first_due_date': date.today(),
     'cash_price': 50000,
@@ -293,6 +427,9 @@ c4 = Contract.create({
     'product_id': leasing_product.id,
     'asset_id': assets[6].id,  # Honda CR-V
     'hirer_id': customers[8].id,  # Beta Trading
+    'finance_company_id': finance_companies[0].id,  # Hong Leong Finance (external finance partner)
+    'insurer_id': insurers[0].id,  # Great Eastern Insurance
+    'supplier_id': suppliers[0].id,  # Borneo Motors
     'agreement_date': date.today() - timedelta(days=45),
     'first_due_date': date.today() - timedelta(days=15),
     'cash_price': 120000,
@@ -320,6 +457,9 @@ c5 = Contract.create({
     'product_id': hp_premium_product.id,
     'asset_id': assets[3].id,  # Mercedes
     'hirer_id': customers[4].id,  # Diana Prince
+    'sales_agent_id': brokers[0].id,  # Prime Auto Brokers
+    'insurer_id': insurers[1].id,  # AXA Insurance
+    'supplier_id': suppliers[1].id,  # Cycle & Carriage (Mercedes dealer)
     'agreement_date': date.today() - timedelta(days=120),  # 4 months old
     'first_due_date': date.today() - timedelta(days=90),
     'cash_price': 180000,
@@ -347,6 +487,9 @@ c6 = Contract.create({
     'product_id': hp_product.id,
     'asset_id': assets[0].id,  # Toyota Camry
     'hirer_id': customers[5].id,  # Evan Wright
+    'sales_agent_id': brokers[1].id,  # Elite Finance Agents
+    'insurer_id': insurers[2].id,  # NTUC Income
+    'supplier_id': suppliers[0].id,  # Borneo Motors (Toyota)
     'agreement_date': date.today(),
     'first_due_date': date.today() + timedelta(days=30),
     'cash_price': 100000,
@@ -431,6 +574,15 @@ print("=" * 60)
 print("\n📊 Summary:")
 print(f"  • Products: 3 (Standard HP, Premium HP, Leasing)")
 print(f"  • Customers: {len(customers)} (7 individuals + 3 companies)")
+print(f"  • Business Partners:")
+print(f"    - Brokers/Sales Agents: {len(brokers)}")
+print(f"    - Insurance Companies: {len(insurers)}")
+print(f"    - Finance Companies: {len(finance_companies)}")
+print(f"    - Suppliers/Dealers: {len(suppliers)}")
+print(f"  • Fleet Data:")
+print(f"    - Brands: Toyota, Honda, Nissan, Mercedes, BMW")
+print(f"    - Models: 7 different models")
+print(f"    - Vehicles: {len(assets)} with fleet integration")
 print(f"  • Assets: {len(assets)} vehicles")
 print(f"  • Finance Terms: {len(terms)} options (12-60 months)")
 print(f"  • Contracts: {len(contracts)}")

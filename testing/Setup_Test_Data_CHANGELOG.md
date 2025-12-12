@@ -1,5 +1,182 @@
 # Test Data Script - Fixes Changelog
 
+## Version 7 - Business Partners Integration (2025-12-12)
+
+### Enhancement Added
+
+**Feature:** Added comprehensive test data for all business partner types used in finance contracts.
+
+### What Was Added
+
+Created test data for 4 types of business partners:
+
+#### 1. **Sales Agents / Brokers** (3 partners)
+- Prime Auto Brokers Pte Ltd
+- Elite Finance Agents LLP
+- Quick Deal Brokers
+
+#### 2. **Insurance Companies** (3 partners)
+- Great Eastern Insurance
+- AXA Insurance Singapore
+- NTUC Income Insurance
+
+#### 3. **Finance Companies** (3 partners)
+- Hong Leong Finance Limited
+- Sing Investments & Finance Ltd
+- Orix Leasing Singapore Ltd
+
+#### 4. **Suppliers / Dealers** (5 partners)
+- Borneo Motors (Singapore) Pte Ltd - Toyota dealer
+- Cycle & Carriage Industries - Mercedes-Benz dealer
+- Performance Motors Ltd - BMW dealer
+- AutoHub Singapore Pte Ltd - Multi-brand used cars
+- Prime Car Traders - Pre-owned vehicle specialist
+
+### Contract Updates
+
+All 6 test contracts now include realistic business partner assignments:
+
+| Contract | Broker | Insurer | Finance Co. | Supplier |
+|----------|--------|---------|-------------|----------|
+| C1 (John Doe) | Prime Auto Brokers | Great Eastern | - | Borneo Motors |
+| C2 (Acme Logistics) | Elite Finance Agents | AXA Insurance | - | AutoHub |
+| C3 (Charlie Brown) | Quick Deal Brokers | NTUC Income | - | Prime Car Traders |
+| C4 (Beta Trading - Lease) | - | Great Eastern | Hong Leong Finance | Borneo Motors |
+| C5 (Diana Prince - Premium) | Prime Auto Brokers | AXA Insurance | - | Cycle & Carriage |
+| C6 (Evan Wright - Draft) | Elite Finance Agents | NTUC Income | - | Borneo Motors |
+
+### Code Added
+
+```python
+# Sales Agents / Brokers
+brokers = []
+for name, email, phone in brokers_data:
+    b = Partner.create({
+        'name': name,
+        'is_company': True,
+        'finance_partner_type': 'broker',
+        # ... other fields
+    })
+    brokers.append(b)
+
+# Similar patterns for insurers, finance_companies, suppliers
+```
+
+### Benefits
+
+✅ Contracts now show complete business relationships
+✅ Dropdown fields populate with realistic partner names
+✅ Can test partner-specific reports and filters
+✅ Demonstrates partner type filtering in UI
+✅ Commission tracking can be tested with broker assignments
+✅ Insurance integration scenarios ready for testing
+✅ External finance company workflows can be tested
+
+### Total Test Data Created
+
+- **14 Business Partners** (3 brokers + 3 insurers + 3 finance cos + 5 suppliers)
+- All partners have proper `finance_partner_type` classification
+- Singapore-based addresses and contact details
+- Ready for reporting, filtering, and commission calculations
+
+---
+
+## Version 6 - Fleet Vehicle Integration (2025-12-12)
+
+### Issue Fixed
+
+**Problem:** Asset Info fields (Make, Model, Asset Reg No.) appear empty in contract form even though asset is selected.
+
+**Root Cause:** Contract form displays asset info through related fields that traverse the fleet.vehicle relationship:
+- `asset_id.vehicle_id.license_plate` → Asset Reg No.
+- `asset_id.vehicle_id.model_id.brand_id.name` → Make
+- `asset_id.vehicle_id.model_id.name` → Model
+
+The test script was creating assets with direct fields (`make`, `model`, `registration_no`) but NOT creating `vehicle_id` links to fleet vehicles.
+
+### Changes Made
+
+**Before (INCOMPLETE):**
+```python
+# Only created finance.asset with direct fields
+Asset.create({
+    'name': name,
+    'asset_type': 'vehicle',
+    'status': 'available',
+    'registration_no': reg,
+    'make': make,
+    'model': model,
+    'chassis_no': f"CHS-{reg}",
+    # No vehicle_id link!
+})
+```
+
+**After (COMPLETE):**
+```python
+FleetVehicle = env['fleet.vehicle']
+FleetModel = env['fleet.vehicle.model']
+FleetBrand = env['fleet.vehicle.model.brand']
+
+# 1. Create/find brand
+brand = FleetBrand.search([('name', '=', make_name)], limit=1)
+if not brand:
+    brand = FleetBrand.create({'name': make_name})
+
+# 2. Create/find model
+model = FleetModel.search([('name', '=', model_name), ('brand_id', '=', brand.id)], limit=1)
+if not model:
+    model = FleetModel.create({
+        'name': model_name,
+        'brand_id': brand.id,
+    })
+
+# 3. Create fleet vehicle
+vehicle = FleetVehicle.create({
+    'model_id': model.id,
+    'license_plate': reg,
+    'vin_sn': f"CHS-{reg}",
+    'driver_id': False,
+})
+
+# 4. Create finance asset linked to fleet vehicle
+Asset.create({
+    'name': name,
+    'asset_type': 'vehicle',
+    'status': 'available',
+    'vehicle_id': vehicle.id,  # KEY: Link to fleet vehicle
+    'engine_no': f"ENG-{reg}",
+    'vehicle_condition': condition,
+})
+```
+
+### How It Works
+
+The Asset Finance module integrates with Odoo's Fleet module:
+
+1. **Fleet Hierarchy**: Brand → Model → Vehicle
+   - `fleet.vehicle.model.brand` (e.g., Toyota, Honda, Mercedes)
+   - `fleet.vehicle.model` (e.g., Camry, Civic, C180)
+   - `fleet.vehicle` (actual vehicle with license plate)
+
+2. **Finance Asset**: Links to fleet.vehicle via `vehicle_id`
+   - Asset's computed fields automatically populate from vehicle:
+     - `registration_no` ← `vehicle_id.license_plate`
+     - `make` ← `vehicle_id.model_id.brand_id.name`
+     - `model` ← `vehicle_id.model_id.name`
+
+3. **Contract Form**: Uses related fields that traverse this chain
+   - Displays asset info by following: `asset_id → vehicle_id → model_id → brand_id`
+
+### Results
+✅ Fleet brands created (Toyota, Honda, Nissan, Mercedes, BMW)
+✅ Fleet models created (Camry, Civic, NV200, C180, 320i, Vios, CR-V)
+✅ Fleet vehicles created with license plates
+✅ Finance assets properly linked to fleet vehicles
+✅ Asset Info fields now display correctly in contract form
+✅ Make, Model, and Asset Reg No. populate automatically
+
+---
+
 ## Version 5 - Payment Creation Fix (2025-12-12)
 
 ### Issue Fixed
@@ -278,6 +455,7 @@ See [UBUNTU_RUN_GUIDE.md](UBUNTU_RUN_GUIDE.md) for details.
 | v4 | `due_date` doesn't exist | Changed to `date_due` | ✅ Fixed |
 | v4 | `payment_status` doesn't exist | Changed to `paid_date` | ✅ Fixed |
 | v5 | `ref` field doesn't exist in payment | Removed `ref`, added error handling | ✅ Fixed |
+| v6 | Asset Info fields empty in contract form | Create fleet vehicles and link to assets | ✅ Fixed |
 
 The script should now run successfully on any Odoo 19 instance with the Asset Finance module installed!
 
