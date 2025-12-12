@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Explicitly define the model external ID to avoid loading issues -->
+    <record id="model_finance_account_config" model="ir.model">
+        <field name="model">finance.account.config</field>
+        <field name="name">Finance Account Configuration</field>
+    </record>
+</odoo>

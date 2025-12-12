@@ -7,6 +7,7 @@
     'depends': ['base', 'account', 'sale', 'purchase', 'fleet'],
     'data': [
         'security/security.xml',
+        'security/ir_model.xml',
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'data/test_users_data.xml',  # For testing user setup. Remove in production.
