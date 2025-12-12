@@ -1,104 +1,100 @@
 // Asset Finance Theme - Navbar Styles
 
 .o_main_navbar {
-    background: linear-gradient(135deg, $af-navbar-bg 0%, $af-navbar-hover 100%);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border-bottom: none;
-    padding: 0.5rem 1rem;
-    min-height: 56px;
+    // 1. Container: Clean White
+    background: $af-navbar-bg !important;
+    border-bottom: 1px solid $af-navbar-border !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03); // Subtle shadow
+    padding: 0.25rem 1rem;
+    min-height: 60px; // Slightly taller for better proportions
 
-    // Brand/Logo area
+    // 2. Brand/Logo Area
     .o_menu_brand {
-        color: white !important;
-        font-weight: 600;
-        font-size: 1.125rem;
+        color: $o-brand-primary !important; // Blue Logo Text
+        font-weight: 700;
+        font-size: 1.25rem;
         letter-spacing: -0.025em;
-        padding: 0.5rem 1rem;
-
+        padding: 0.5rem 0.75rem;
+        margin-right: 1rem;
+        
         &:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-radius: 0.5rem;
+            background-color: transparent; // No blocky background on logo hover
+            opacity: 0.8;
         }
     }
 
-    // Menu sections (top menu items)
+    // 3. Menu Sections (Top Menu Items)
     .o_menu_sections {
-        .dropdown-toggle,
-        .o_nav_entry {
-            color: rgba(255, 255, 255, 0.95) !important;
+        .o_nav_entry, 
+        .dropdown-toggle {
+            color: $af-navbar-text !important;
             font-weight: 500;
-            font-size: 0.9375rem;
-            padding: 0.625rem 1rem;
-            margin: 0 0.125rem;
-            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            padding: 0.5rem 0.875rem;
+            margin: 0 0.25rem;
+            border-radius: 0.375rem;
             transition: all 0.2s ease;
 
+            // Hover: Light gray pill shape
             &:hover {
-                background-color: rgba(255, 255, 255, 0.15);
-                color: white !important;
-                transform: translateY(-1px);
+                background-color: $af-navbar-item-hover-bg;
+                color: $af-navbar-text-hover !important;
             }
 
-            &.active,
+            // Active/Open: Light Blue pill shape
+            &.active, 
             &.show {
-                background-color: rgba(255, 255, 255, 0.2);
-                color: white !important;
+                background-color: rgba($o-brand-primary, 0.08);
+                color: $o-brand-primary !important;
                 font-weight: 600;
             }
         }
     }
 
-    // System tray (right side icons/buttons)
+    // 4. System Tray (Right Side Icons)
     .o_menu_systray {
-        .dropdown-toggle,
-        button,
+        border-left: 1px solid $af-navbar-border; // Separator
+        margin-left: 0.5rem;
+        padding-left: 0.5rem;
+
+        .dropdown-toggle, 
+        button, 
         a {
-            color: rgba(255, 255, 255, 0.95) !important;
+            color: $af-navbar-text !important;
             padding: 0.5rem;
             margin: 0 0.125rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-
+            border-radius: 0.375rem;
+            
             &:hover {
-                background-color: rgba(255, 255, 255, 0.15);
-                color: white !important;
-                transform: translateY(-1px);
+                background-color: $af-navbar-item-hover-bg;
+                color: $o-brand-primary !important;
             }
         }
 
-        .o_user_menu {
-            .dropdown-toggle {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.5rem 0.75rem;
+        // Fix for the User Menu (Avatar area)
+        .o_user_menu .dropdown-toggle {
+            padding: 0.25rem 0.5rem;
+            
+            .oe_topbar_name {
+                color: $af-navbar-text-hover;
+                font-weight: 600;
             }
         }
     }
 
-    // Apps menu button
+    // 5. Apps Menu Button (The grid icon)
     .o_navbar_apps_menu {
         .dropdown-toggle {
-            color: white !important;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 0.5rem 1rem !important;
+            color: $o-brand-primary !important; // Accent color for the main button
+            background-color: rgba($o-brand-primary, 0.05); // Subtle tint
             border-radius: 0.5rem;
-            transition: all 0.2s ease;
+            padding: 0.6rem !important;
 
             &:hover {
-                background-color: rgba(255, 255, 255, 0.2);
-                transform: translateY(-1px);
+                background-color: $o-brand-primary;
+                color: white !important; // Invert on hover
+                box-shadow: 0 4px 6px rgba($o-brand-primary, 0.2);
             }
-        }
-    }
-
-    // Generic links and buttons
-    a,
-    button {
-        color: rgba(255, 255, 255, 0.9);
-
-        &:hover {
-            color: white;
         }
     }
 }

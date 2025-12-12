@@ -1,0 +1,40 @@
+/* Asset Finance Theme - Main Styles 
+   Note: Bootstrap 5 mixins and variables are already available here via Odoo.
+*/
+
+// 1. Navbar Customization (Gradient)
+// We use !important here only because Odoo's navbar has high specificity
+.o_main_navbar {
+    background: linear-gradient(135deg, $o-brand-primary 0%, darken($o-brand-primary, 10%) 100%) !important;
+    border-bottom: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    .o_menu_brand {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+}
+
+// 2. Card / Form Improvements
+.o_form_view {
+    .o_form_sheet_bg {
+        background-color: transparent; // Let the body background show
+    }
+    
+    .o_form_sheet {
+        border-radius: 0.75rem; // Modern rounded corners
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+}
+
+// 3. Button Modernization
+.btn {
+    border-radius: 0.5rem; // $af-btn-radius
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+
+    &:active {
+        transform: translateY(1px);
+    }
+}

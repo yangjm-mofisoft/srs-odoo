@@ -1,6 +1,6 @@
 {
     'name': 'Asset Finance - Modern Theme',
-    'version': '1.0.7',
+    'version': '1.1.0',
     'category': 'Theme/Backend',
     'summary': 'Modern Bootstrap 5 Admin Theme for Asset Finance Module',
     'description': """
@@ -23,22 +23,16 @@
     ],
     'data': [
         'views/webclient_templates.xml',
-        'views/assets.xml',
     ],
     'assets': {
-        # Load primary variables FIRST - before Odoo's variables
+        # 1. Variables must be loaded first to override Odoo defaults
         'web._assets_primary_variables': [
             ('after', 'web/static/src/scss/primary_variables.scss', 'asset_finance_theme/static/src/scss/primary_variables.scss'),
         ],
-        # Load theme styles in BACKEND bundle (for main Odoo interface)
+        # 2. Backend Styles and Logic
         'web.assets_backend': [
-            # Bootstrap 5.3.2 - Pre-compiled CSS (Odoo 19 blocks SCSS @imports)
-            'asset_finance_theme/static/src/bootstrap5.min.css',
-
-            # Theme SCSS Files - Asset Finance custom styling
-            'asset_finance_theme/static/src/webclient/**/*.scss',
-
-            # JavaScript theme enhancements
+            # Replaced the full bootstrap include with a targeted SCSS file
+            'asset_finance_theme/static/src/scss/theme.scss', 
             'asset_finance_theme/static/src/js/theme.js',
         ],
     },

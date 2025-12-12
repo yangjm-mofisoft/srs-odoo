@@ -1,12 +1,17 @@
 // Asset Finance Theme - Primary Variables
 // Override Odoo's core variables (loaded BEFORE Odoo's defaults)
 
-// Brand Colors - Modern Blue
-$o-brand-primary: #2563eb !default;
-$o-brand-secondary: #64748b !default;
+// 1. Brand Colors - Modern Blue (Kept as Accent)
+$o-brand-primary: #2563eb !default;     // Tailwind Blue 600
+$o-brand-secondary: #64748b !default;   // Slate 500
 
-// Additional custom variables for Asset Finance theme
-$af-navbar-bg: #2563eb;
-$af-navbar-hover: #1e40af;
-$af-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+// 2. Navbar Configuration (SWITCH TO LIGHT THEME)
+$af-navbar-bg: #ffffff;                 // White background
+$af-navbar-border: #e2e8f0;             // Light gray border
+$af-navbar-text: #475569;               // Slate 600 (Dark Gray)
+$af-navbar-text-hover: #0f172a;         // Slate 900 (Black)
+$af-navbar-item-hover-bg: #f1f5f9;      // Slate 100 (Very light gray)
+
+// 3. UI Components
+$af-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 $af-btn-radius: 0.5rem;
