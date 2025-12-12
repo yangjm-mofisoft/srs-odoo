@@ -381,36 +381,36 @@ def create_payment(contract, schedule_line, amount, payment_date, is_full=True):
         'amount': amount,
         'date': payment_date,
         'journal_id': bank_journal.id,
-        'ref': f'Payment for {contract.agreement_no} - Inst #{schedule_line.inst_no}',
+        'ref': f'Payment for {contract.agreement_no} - Inst #{schedule_line.sequence}',
     })
     payment.action_post()
 
     # Link payment to schedule line (this would be done through the payment allocation logic)
     # For now, just mark as paid if full payment
     if is_full:
-        schedule_line.write({'payment_status': 'paid', 'payment_date': payment_date})
+        schedule_line.write({'paid_date': payment_date})
 
     return payment
 
 # Contract 1 (John Doe): 1 payment made on time
 if c1.line_ids:
     first_line = c1.line_ids[0]
-    create_payment(c1, first_line, first_line.total_installment, first_line.due_date, True)
+    create_payment(c1, first_line, first_line.amount_total, first_line.date_due, True)
     print(f"  ✓ C1 ({c1.agreement_no}): 1 on-time payment recorded")
 
 # Contract 2 (Acme): 2 payments made, 1 late
 if len(c2.line_ids) >= 2:
     line1 = c2.line_ids[0]
     line2 = c2.line_ids[1]
-    create_payment(c2, line1, line1.total_installment, line1.due_date + timedelta(days=5), True)
-    create_payment(c2, line2, line2.total_installment, line2.due_date, True)
+    create_payment(c2, line1, line1.amount_total, line1.date_due + timedelta(days=5), True)
+    create_payment(c2, line2, line2.amount_total, line2.date_due, True)
     print(f"  ✓ C2 ({c2.agreement_no}): 2 payments (1 late, 1 on-time)")
 
 # Contract 5 (Diana): 3 payments made, all on time
 if len(c5.line_ids) >= 3:
     for i in range(3):
         line = c5.line_ids[i]
-        create_payment(c5, line, line.total_installment, line.due_date, True)
+        create_payment(c5, line, line.amount_total, line.date_due, True)
     print(f"  ✓ C5 ({c5.agreement_no}): 3 on-time payments (good payer)")
 
 print(f"\n  ✓ Payment scenarios simulated\n")

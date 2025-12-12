@@ -1,5 +1,43 @@
 # Test Data Script - Fixes Changelog
 
+## Version 4 - Installment Line Field Names Fix (2025-12-12)
+
+### Issue Fixed
+
+**Error:** `AttributeError: 'finance.contract.line' object has no attribute 'total_installment'`
+
+**Root Cause:** Wrong field names for installment line attributes.
+
+### Changes Made
+
+Fixed multiple field names in the payment simulation section:
+
+| Wrong Name | Correct Name | Purpose |
+|------------|--------------|---------|
+| `total_installment` | `amount_total` | Total installment amount |
+| `due_date` | `date_due` | Due date for payment |
+| `payment_status` | `paid_date` | Payment tracking field |
+| `inst_no` | `sequence` | Installment number |
+
+**Before (WRONG):**
+```python
+create_payment(c1, first_line, first_line.total_installment, first_line.due_date, True)
+schedule_line.write({'payment_status': 'paid', 'payment_date': payment_date})
+```
+
+**After (CORRECT):**
+```python
+create_payment(c1, first_line, first_line.amount_total, first_line.date_due, True)
+schedule_line.write({'paid_date': payment_date})
+```
+
+### Results
+✅ Payments created successfully
+✅ Payment dates recorded on installment lines
+✅ Script completes without errors
+
+---
+
 ## Version 3 - Schedule Line Field Fix (2025-12-12)
 
 ### Issue Fixed
@@ -186,6 +224,9 @@ See [UBUNTU_RUN_GUIDE.md](UBUNTU_RUN_GUIDE.md) for details.
 | v2 | Invalid `'hp_act'` product type | Use valid types: `'hp'`, `'lease'` | ✅ Fixed |
 | v2 | Invalid `'leasing'` application type | Changed to `'lease'` | ✅ Fixed |
 | v3 | `schedule_line_ids` doesn't exist | Changed to `line_ids` | ✅ Fixed |
+| v4 | `total_installment` doesn't exist | Changed to `amount_total` | ✅ Fixed |
+| v4 | `due_date` doesn't exist | Changed to `date_due` | ✅ Fixed |
+| v4 | `payment_status` doesn't exist | Changed to `paid_date` | ✅ Fixed |
 
 The script should now run successfully on any Odoo 19 instance with the Asset Finance module installed!
 
