@@ -251,10 +251,4 @@
         </field>
     </record>
 
-    <menuitem id="menu_finance_dashboard" 
-              name="Dashboard" 
-              parent="menu_finance_root" 
-              action="action_finance_dashboard" 
-              sequence="0"/>
-
 </odoo>
