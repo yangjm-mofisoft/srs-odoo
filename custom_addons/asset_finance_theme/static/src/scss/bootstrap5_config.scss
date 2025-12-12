@@ -1,0 +1,89 @@
+// Asset Finance Theme - Bootstrap 5 Configuration
+// This file maps Bootstrap 5 variables to Odoo/Asset Finance variables
+
+// Import Odoo variables first (they are available from primary_variables)
+// $o-brand-primary and custom variables are already defined
+
+// Bootstrap 5 Color System - Map to Asset Finance colors
+$primary:       $o-brand-primary !default;
+$secondary:     $o-brand-secondary !default;
+$success:       #10b981 !default;
+$info:          #3b82f6 !default;
+$warning:       #f59e0b !default;
+$danger:        #ef4444 !default;
+$light:         #f9fafb !default;
+$dark:          #1f2937 !default;
+
+// Body
+$body-bg:       #f9fafb !default;
+$body-color:    #1f2937 !default;
+
+// Typography
+$font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !default;
+$font-size-base: 0.875rem !default;
+$line-height-base: 1.5 !default;
+
+// Border radius - Use Asset Finance theme values
+$border-radius:    $af-btn-radius !default;
+$border-radius-sm: 0.375rem !default;
+$border-radius-lg: 0.75rem !default;
+$border-radius-xl: 1rem !default;
+
+// Shadows
+$box-shadow:       $af-card-shadow !default;
+$box-shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.05) !default;
+$box-shadow-lg:    0 10px 15px -3px rgba(0, 0, 0, 0.1) !default;
+
+// Buttons
+$btn-border-radius:    $border-radius !default;
+$btn-border-radius-sm: $border-radius-sm !default;
+$btn-border-radius-lg: $border-radius-lg !default;
+$btn-font-weight:      500 !default;
+$btn-transition:       all 0.2s ease !default;
+
+// Forms
+$input-border-radius:       $border-radius !default;
+$input-border-radius-sm:    $border-radius-sm !default;
+$input-border-radius-lg:    $border-radius-lg !default;
+$input-focus-border-color:  $primary !default;
+$input-focus-box-shadow:    0 0 0 3px rgba($primary, 0.1) !default;
+
+// Cards
+$card-border-radius:        $border-radius-lg !default;
+$card-box-shadow:          $box-shadow !default;
+$card-border-width:        0 !default;
+
+// Spacing - Bootstrap defaults are good
+$spacer: 1rem !default;
+
+// Grid breakpoints
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+) !default;
+
+// Container max widths
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1140px,
+  xxl: 1320px
+) !default;
+
+// Navbar customization
+$navbar-dark-color:            white !default;
+$navbar-dark-hover-color:      rgba(white, 0.8) !default;
+$navbar-dark-active-color:     white !default;
+$navbar-dark-brand-color:      white !default;
+$navbar-dark-brand-hover-color: white !default;
+
+// Enable/Disable Features
+$enable-shadows:            true !default;
+$enable-gradients:          false !default;
+$enable-rounded:            true !default;
+$enable-negative-margins:   true !default;

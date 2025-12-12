@@ -1,0 +1,104 @@
+// Asset Finance Theme - Navbar Styles
+
+.o_main_navbar {
+    background: linear-gradient(135deg, $af-navbar-bg 0%, $af-navbar-hover 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-bottom: none;
+    padding: 0.5rem 1rem;
+    min-height: 56px;
+
+    // Brand/Logo area
+    .o_menu_brand {
+        color: white !important;
+        font-weight: 600;
+        font-size: 1.125rem;
+        letter-spacing: -0.025em;
+        padding: 0.5rem 1rem;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 0.5rem;
+        }
+    }
+
+    // Menu sections (top menu items)
+    .o_menu_sections {
+        .dropdown-toggle,
+        .o_nav_entry {
+            color: rgba(255, 255, 255, 0.95) !important;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            padding: 0.625rem 1rem;
+            margin: 0 0.125rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.15);
+                color: white !important;
+                transform: translateY(-1px);
+            }
+
+            &.active,
+            &.show {
+                background-color: rgba(255, 255, 255, 0.2);
+                color: white !important;
+                font-weight: 600;
+            }
+        }
+    }
+
+    // System tray (right side icons/buttons)
+    .o_menu_systray {
+        .dropdown-toggle,
+        button,
+        a {
+            color: rgba(255, 255, 255, 0.95) !important;
+            padding: 0.5rem;
+            margin: 0 0.125rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.15);
+                color: white !important;
+                transform: translateY(-1px);
+            }
+        }
+
+        .o_user_menu {
+            .dropdown-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+    }
+
+    // Apps menu button
+    .o_navbar_apps_menu {
+        .dropdown-toggle {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem !important;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+                transform: translateY(-1px);
+            }
+        }
+    }
+
+    // Generic links and buttons
+    a,
+    button {
+        color: rgba(255, 255, 255, 0.9);
+
+        &:hover {
+            color: white;
+        }
+    }
+}
