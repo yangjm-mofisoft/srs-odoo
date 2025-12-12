@@ -13,7 +13,7 @@ echo "=================================================="
 cp testing/scripts/setup_test_data_02_enhanced.py custom_addons/
 
 # Run using Odoo shell
-docker-compose exec -T web odoo shell -d "$DATABASE" --no-http < custom_addons/setup_test_data_02_enhanced.py
+docker-compose exec -T web ./odoo-bin shell -c /etc/odoo/odoo.conf -d "$DATABASE" --db_host=db --no-http < custom_addons/setup_test_data_02_enhanced.py
 
 # Clean up
 rm custom_addons/setup_test_data_02_enhanced.py
