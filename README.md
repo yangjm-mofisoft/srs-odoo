@@ -1,3 +1,16 @@
+Install Asset Finance Module:
+
+1. Pull clodes from git
+2. Log into odoo as Administrator
+3. Click Settings menu, Scroll to the bottom of the page and Click "Activate the developer mode".
+4. Go to the Apps menu. In the top menu bar, click "Update Apps List" (this only appears in Developer Mode).A dialog will pop up; click the "Update" button.
+5. Refresh Apps module the Asset Finance Management (asset_finance) should appear. Click Activate button to activate the module
+
+Install MuK themes:
+
+If the above steps are done, go to Apps screen. In Search box remove 'Apps' filter and input MuK to search. All MuK theme modules should appear. Click Activate button of MuK backend Theme Module
+
+
 Docker Commands:
 
 Start:   
@@ -40,3 +53,22 @@ else:
     print("WARNING: Module not found (maybe already uninstalled?)")
 
 Third step is to execute exit() to exit shell
+
+In case the module is uninstalled and folder is deleted but the module still appears in Apps screen, do below steps to remove from odoo db
+
+1. execute command line:
+
+  docker exec -it <db container name>  psql -U odoo -d vfs -c "DELETE FROM ir_module_module WHERE name = '<module name>';"
+
+  db container name:  srs-odoo_db_1 in test server
+  module name: the module to be deleted. for example asset_finance
+
+2. Restart odoo web container. In test server it is docker-compose -f docker-compose.server.yml restart web
+
+3. Deep delete the module using below command line:
+
+  docker exec -it <db container name> psql -U odoo -d vfs -c "DELETE FROM ir_model_data WHERE module = '<module name>';"
+
+4. Confirm no more table related to the module in odoo db"
+
+  docker exec -it <db container name> psql -U odoo -d vfs -c "\dt <module prefix i.e. asset>*;"
