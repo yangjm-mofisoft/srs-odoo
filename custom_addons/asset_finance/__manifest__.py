@@ -27,7 +27,6 @@
         'wizard/settlement_views.xml',
         'wizard/disbursement_wizard_views.xml',
         'views/account_payment_views.xml',
-        'views/report_views.xml',
 
         # --- 2. DEFINE MAIN MENU STRUCTURE ---
         'views/menu_views.xml',  # Creates 'menu_finance_config'
@@ -36,6 +35,7 @@
         'views/partner_menus.xml',
         'views/access_rights_views.xml',       # Adds 'Security' to 'menu_finance_config'
         'views/res_config_settings_views.xml', # Adds 'Settings' to 'menu_finance_config'
+        'views/report_views.xml',
         
         'reports/finance_reports.xml',
         'reports/finance_contract_template.xml',
