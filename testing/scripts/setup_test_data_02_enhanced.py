@@ -393,23 +393,23 @@ def create_payment(contract, schedule_line, amount, payment_date, is_full=True):
     return payment
 
 # Contract 1 (John Doe): 1 payment made on time
-if c1.schedule_line_ids:
-    first_line = c1.schedule_line_ids[0]
+if c1.line_ids:
+    first_line = c1.line_ids[0]
     create_payment(c1, first_line, first_line.total_installment, first_line.due_date, True)
     print(f"  ✓ C1 ({c1.agreement_no}): 1 on-time payment recorded")
 
 # Contract 2 (Acme): 2 payments made, 1 late
-if len(c2.schedule_line_ids) >= 2:
-    line1 = c2.schedule_line_ids[0]
-    line2 = c2.schedule_line_ids[1]
+if len(c2.line_ids) >= 2:
+    line1 = c2.line_ids[0]
+    line2 = c2.line_ids[1]
     create_payment(c2, line1, line1.total_installment, line1.due_date + timedelta(days=5), True)
     create_payment(c2, line2, line2.total_installment, line2.due_date, True)
     print(f"  ✓ C2 ({c2.agreement_no}): 2 payments (1 late, 1 on-time)")
 
 # Contract 5 (Diana): 3 payments made, all on time
-if len(c5.schedule_line_ids) >= 3:
+if len(c5.line_ids) >= 3:
     for i in range(3):
-        line = c5.schedule_line_ids[i]
+        line = c5.line_ids[i]
         create_payment(c5, line, line.total_installment, line.due_date, True)
     print(f"  ✓ C5 ({c5.agreement_no}): 3 on-time payments (good payer)")
 

@@ -1,5 +1,36 @@
 # Test Data Script - Fixes Changelog
 
+## Version 3 - Schedule Line Field Fix (2025-12-12)
+
+### Issue Fixed
+
+**Error:** `AttributeError: 'finance.contract' object has no attribute 'schedule_line_ids'`
+
+**Root Cause:** Wrong field name for contract installment lines.
+
+### Changes Made
+
+Changed `schedule_line_ids` to `line_ids` throughout payment simulation code.
+
+**Before (WRONG):**
+```python
+if c1.schedule_line_ids:
+    first_line = c1.schedule_line_ids[0]
+```
+
+**After (CORRECT):**
+```python
+if c1.line_ids:
+    first_line = c1.line_ids[0]
+```
+
+### Results
+✅ All 6 contracts created: HP/2025/00001 through HP/2025/00006
+✅ Payment simulation works correctly
+✅ Script completes without errors
+
+---
+
 ## Version 2 - Product Type Fixes (2025-12-12)
 
 ### Issues Fixed
@@ -154,5 +185,34 @@ See [UBUNTU_RUN_GUIDE.md](UBUNTU_RUN_GUIDE.md) for details.
 | v1 | `company_id` field error | Remove company filter from searches | ✅ Fixed |
 | v2 | Invalid `'hp_act'` product type | Use valid types: `'hp'`, `'lease'` | ✅ Fixed |
 | v2 | Invalid `'leasing'` application type | Changed to `'lease'` | ✅ Fixed |
+| v3 | `schedule_line_ids` doesn't exist | Changed to `line_ids` | ✅ Fixed |
 
 The script should now run successfully on any Odoo 19 instance with the Asset Finance module installed!
+
+## About Contracts Not Showing
+
+If you don't see contracts in the Contracts screen after running the script, this is likely due to:
+
+1. **State Filter:** The contracts may be in 'draft' state. Check your filter settings.
+2. **Menu Filter:** Ensure you're looking at the correct menu (Finance > Contracts > All Contracts)
+3. **Database:** Verify you're connected to the correct database ('vfs')
+
+The script creates these contracts successfully:
+- HP/2025/00001 - Individual with Guarantors
+- HP/2025/00002 - Company Customer
+- HP/2025/00003 - Small HP Contract
+- HP/2025/00004 - Finance Lease
+- HP/2025/00005 - Premium Customer
+- HP/2025/00006 - Draft Contract
+
+To verify they exist, try:
+```bash
+docker-compose exec web ./odoo-bin shell -c /etc/odoo/odoo.conf -d vfs --db_host=db
+```
+
+Then in the shell:
+```python
+contracts = env['finance.contract'].search([])
+for c in contracts:
+    print(f"{c.agreement_no} - {c.hirer_id.name} - State: {c.state}")
+```
