@@ -75,11 +75,11 @@ hp_product = Product.create({
     'max_months': 60,
 })
 
-hp_act_product = Product.create({
-    'name': 'HP Act (Under $55k)',
-    'product_type': 'hp_act',
+hp_premium_product = Product.create({
+    'name': 'Premium HP (Lower Rate)',
+    'product_type': 'hp',
     'active': True,
-    'default_int_rate': 2.8,
+    'default_int_rate': 2.3,
     'max_finance_percent': 70.0,
     'min_finance_percent': 10.0,
     'min_months': 12,
@@ -88,7 +88,7 @@ hp_act_product = Product.create({
 
 leasing_product = Product.create({
     'name': 'Finance Lease',
-    'product_type': 'leasing',
+    'product_type': 'lease',
     'active': True,
     'default_int_rate': 2.0,
     'max_finance_percent': 80.0,
@@ -97,7 +97,7 @@ leasing_product = Product.create({
     'max_months': 84,
 })
 
-print(f"  ✓ Created 3 products: HP, HP Act, Leasing\n")
+print(f"  ✓ Created 3 products: HP, Premium HP, Leasing\n")
 
 # --- 2. CREATE CUSTOMERS ---
 print("2. Creating Customers...")
@@ -258,12 +258,12 @@ c2.action_generate_schedule()
 contracts.append(('Company Customer', c2))
 print(f"    ✓ Created: {c2.agreement_no}")
 
-# === SCENARIO 3: HP Act Contract (Under $55k) ===
-print("  Scenario 3: HP Act Contract (Under $55k)")
+# === SCENARIO 3: Smaller HP Contract (Economy Car) ===
+print("  Scenario 3: Small HP Contract (Toyota Vios)")
 c3 = Contract.create({
     'company_id': company.id,
-    'application_type': 'hp_act',
-    'product_id': hp_act_product.id,
+    'application_type': 'hp',
+    'product_id': hp_product.id,
     'asset_id': assets[5].id,  # Toyota Vios
     'hirer_id': customers[3].id,  # Charlie Brown
     'agreement_date': date.today() - timedelta(days=30),
@@ -282,14 +282,14 @@ c3 = Contract.create({
 c3._compute_financials()
 c3._compute_installment_amounts()
 c3.action_generate_schedule()
-contracts.append(('HP Act', c3))
+contracts.append(('Small HP', c3))
 print(f"    ✓ Created: {c3.agreement_no}")
 
 # === SCENARIO 4: Leasing Contract ===
 print("  Scenario 4: Finance Lease")
 c4 = Contract.create({
     'company_id': company.id,
-    'application_type': 'leasing',
+    'application_type': 'lease',
     'product_id': leasing_product.id,
     'asset_id': assets[6].id,  # Honda CR-V
     'hirer_id': customers[8].id,  # Beta Trading
@@ -317,7 +317,7 @@ print("  Scenario 5: Premium Customer - Mercedes")
 c5 = Contract.create({
     'company_id': company.id,
     'application_type': 'hp',
-    'product_id': hp_product.id,
+    'product_id': hp_premium_product.id,
     'asset_id': assets[3].id,  # Mercedes
     'hirer_id': customers[4].id,  # Diana Prince
     'agreement_date': date.today() - timedelta(days=120),  # 4 months old
@@ -423,7 +423,7 @@ print("=" * 60)
 print("TEST DATA SETUP COMPLETE!")
 print("=" * 60)
 print("\n📊 Summary:")
-print(f"  • Products: 3 (HP, HP Act, Leasing)")
+print(f"  • Products: 3 (Standard HP, Premium HP, Leasing)")
 print(f"  • Customers: {len(customers)} (7 individuals + 3 companies)")
 print(f"  • Assets: {len(assets)} vehicles")
 print(f"  • Finance Terms: {len(terms)} options (12-60 months)")
@@ -435,7 +435,7 @@ for desc, contract in contracts:
 print("\n✅ Test Scenarios Covered:")
 print("  1. Individual customer with guarantors")
 print("  2. Company customer")
-print("  3. HP Act (under $55k)")
+print("  3. Small HP contract (economy car)")
 print("  4. Finance lease")
 print("  5. Premium customer with large loan")
 print("  6. Draft contract (pending)")
