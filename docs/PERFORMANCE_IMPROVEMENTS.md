@@ -226,7 +226,7 @@ def default_get(self, fields_list):
 
     # Get rebate fee from system configuration
     rebate_fee_pct = float(self.env['ir.config_parameter'].sudo().get_param(
-        'asset_finance.settlement_rebate_fee', default=20.0
+        'asset_finance.settlement_rebate_fee_pct', default=20.0
     ))
 
     res['rebate_fee_rate'] = rebate_fee_pct  # ✅ From config!

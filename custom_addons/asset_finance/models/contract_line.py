@@ -22,8 +22,9 @@ class FinanceContractLine(models.Model):
     paid_date = fields.Date(string="Paid Date")
 
     # Penalty tracking
-    penalty_applied = fields.Boolean(string="Penalty Applied", default=False,
-        help="Used to track if fixed one-time penalty has been applied to this line")
+    penalty_last_applied_date = fields.Date(string="Last Penalty Date", readonly=True,
+        help="The date the last penalty was calculated for this overdue line. "
+             "Used to ensure daily penalties are not applied more than once a day.")
 
     # Interest recognition tracking
     interest_recognized = fields.Boolean(string="Interest Recognized", default=False,

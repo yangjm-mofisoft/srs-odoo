@@ -308,7 +308,7 @@ class TestFinancialCalculations(AssetFinanceTestCommon):
         """Test settlement rebate fee from configuration"""
         # Set custom rebate fee
         self.env['ir.config_parameter'].sudo().set_param(
-            'asset_finance.settlement_rebate_fee', 25.0
+            'asset_finance.settlement_rebate_fee_pct', 25.0
         )
 
         contract = self._create_test_contract(

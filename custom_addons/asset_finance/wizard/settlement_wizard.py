@@ -50,7 +50,7 @@ class FinanceSettlementWizard(models.TransientModel):
             contract = self.env['finance.contract'].browse(context_id)
 
             # Get rebate fee from system configuration instead of hardcoded default
-            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.settlement_rebate_fee')], limit=1)
+            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.settlement_rebate_fee_pct')], limit=1)
             rebate_fee_pct = float(param.value) if param else 20.0
 
             res.update({

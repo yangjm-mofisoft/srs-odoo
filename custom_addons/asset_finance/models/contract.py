@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from dateutil.relativedelta import relativedelta
 
 class FinanceContractGuarantor(models.Model):
     _name = 'finance.contract.guarantor'
@@ -9,19 +10,13 @@ class FinanceContractGuarantor(models.Model):
     partner_id = fields.Many2one('res.partner', string="Guarantor Name", required=True,
                                  domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
                                  help="Select an individual or company to act as guarantor (not a broker/insurer/finance company/supplier).")
-
-    # --- 1. Pull Details from res.partner ---
     nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
     email = fields.Char(related='partner_id.email', readonly=True)
     phone = fields.Char(related='partner_id.phone', readonly=True)
-
-    # Address Block
     street = fields.Char(related='partner_id.street', readonly=True)
     street2 = fields.Char(related='partner_id.street2', readonly=True)
     city = fields.Char(related='partner_id.city', readonly=True)
     zip = fields.Char(related='partner_id.zip', readonly=True)
-
-    # --- 2. Compliance / Deal Specific Fields ---
     relationship = fields.Selection([
         ('spouse', 'Spouse'),
         ('parent', 'Parent'),
@@ -30,7 +25,6 @@ class FinanceContractGuarantor(models.Model):
         ('director', 'Director'),
         ('other', 'Other')
     ], string="Relationship", required=True)
-
     income_verified = fields.Boolean(string="Income Verified")
     verification_date = fields.Date(string="Verified Date", default=fields.Date.context_today)
     remarks = fields.Char(string="Remarks")
@@ -44,13 +38,9 @@ class FinanceContractJointHirer(models.Model):
     partner_id = fields.Many2one('res.partner', string="Co-Borrower Name", required=True,
                                  domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
                                  help="Select an individual or company to act as co-borrower (not a broker/insurer/finance company/supplier).")
-
-    # --- Pull Details from res.partner ---
     nric = fields.Char(related='partner_id.nric', string="NRIC / ID No", readonly=True)
     email = fields.Char(related='partner_id.email', readonly=True)
     phone = fields.Char(related='partner_id.phone', readonly=True)
-
-    # --- Compliance Fields ---
     share_percentage = fields.Float(string="Liability Share (%)", default=100.0)
     relationship = fields.Selection([
         ('spouse', 'Spouse'),
@@ -75,38 +65,40 @@ class FinanceContract(models.Model):
         ('lease', 'Leasing'),
         ('other', 'Other')
     ], string="Application Type", default='hp', required=True)
-    
-    # 2. SALESPERSON (External Agent/Client)
-    #   "Select from Client", implying this is an external partner/broker
     sales_agent_id = fields.Many2one('res.partner', string="Salesperson (Agent)",
                                      domain="[('finance_partner_type', '=', 'broker'), ('active', '=', True)]",
                                      help="The external salesperson or broker associated with this deal.")
-    
-    # 3. INSURER
     insurer_id = fields.Many2one('res.partner', string="Insurer",
-                                 domain="[('finance_partner_type', '=', 'insurer')]")
+                                 domain="[('finance_partner_type', '=', 'insurer')]"
+    )
     
     # --- Header Info ---
     hp_ac_no = fields.Char(string="HP A/C No.")
-
     product_id = fields.Many2one('finance.product', string="Financial Product",
         domain="[('active', '=', True)]", required=True)
-
-    # Helper to control UI visibility (hides/shows Leasing fields)
     product_type = fields.Selection(related='product_id.product_type', string="Product Type", store=True)
 
     asset_id = fields.Many2one('finance.asset', string="Asset", required=True)
-    asset_reg_no = fields.Char(related='asset_id.vehicle_id.license_plate', string="Asset Reg No.", store=True)
-    asset_make = fields.Char(related='asset_id.vehicle_id.model_id.brand_id.name', string="Make", store=True)
-    asset_model = fields.Char(related='asset_id.vehicle_id.model_id.name', string="Model", store=True)
-    asset_type = fields.Selection(related='asset_id.asset_type', string="Asset Type", store=True)
-
+    asset_reg_no = fields.Char(related='asset_id.registration_no', string="Asset Reg No.", store=True)
+    asset_make = fields.Char(related='asset_id.vehicle_make_id.name', string="Make", store=True)
+    asset_model = fields.Char(related='asset_id.vehicle_model_id.name', string="Model", store=True)
+    asset_type = fields.Selection(
+        selection=[
+            ('vehicle', 'Vehicle'),
+            ('equipment', 'Equipment'),
+            ('property', 'Property'),
+            ('other', 'Other')
+        ],
+        related='asset_id.asset_type',
+        string="Asset Type",
+        readonly=True,
+        store=True
+    )
     asset_condition = fields.Selection([
         ('new', 'New'),
         ('used', 'Used'),
         ('demo', 'Demonstrator')
     ], string="Asset Condition", required=True, default='new')
-
 
     hirer_id = fields.Many2one('res.partner', string="Hirer's Name", required=True, tracking=True,
                                domain="[('finance_partner_type', 'in', [False, '']), ('finance_blacklist', '=', False)]",
@@ -117,7 +109,8 @@ class FinanceContract(models.Model):
     agreement_no = fields.Char(string="Agreement No", required=True, copy=False, default='New')
 
     finance_company_id = fields.Many2one('res.partner', string="Finance Name",
-                                         domain="[('finance_partner_type', '=', 'finance_company')]")
+                                         domain="[('finance_partner_type', '=', 'finance_company')]"
+    )
     submit_date = fields.Date(string="Submit Date")
     entry_date = fields.Date(string="Entry Date", default=fields.Date.context_today)
     inst_day = fields.Integer(string="Inst. Day (1-31)")
@@ -162,18 +155,13 @@ class FinanceContract(models.Model):
     # --- Financials ---
     is_hp_act = fields.Boolean(string="HP Act (<$55k)", compute='_compute_hp_act', store=True,
                                help="Automatically checked if Loan Amount is $55,000 or less.")
-
     interest_type = fields.Selection([
         ('flat', 'Flat Rate'),
-        ('effective', 'Effective Rate') 
-    ], string="Interest Type", default='flat', 
-       help="Effective Rate usually implies standard amortization/annuity.")
-    
-    interest_method = fields.Selection([
-        ('flat', 'Flat Rate (Straight Line)'),
-        ('rule78', 'Rule of 78 (Sum of Digits)')
-    ], string="Interest Method", default='rule78', required=True,
-       help="Method used to allocate interest across installments.")
+        ('effective', 'Effective Rate')
+    ], string="Interest Type", default='flat', required=True, tracking=True,
+        help="Defines the calculation method for interest.\n" 
+             "- Flat Rate: Simple interest calculated on the initial principal for the full term.\n" 
+             "- Effective Rate: Interest calculated on the outstanding balance each period (Amortization).")
 
     payment_scheme = fields.Selection([
         ('arrears', 'Arrears (Normal)'),
@@ -188,8 +176,8 @@ class FinanceContract(models.Model):
     int_rate_pa = fields.Float(string="Int Rate P.A.%", tracking=True)
     no_of_inst = fields.Many2one('finance.term', string="No. of Inst.", tracking=True)
 
-    term_charges = fields.Monetary(string="Term Charges", compute='_compute_financials', store=True, readonly=False)
-    balance_hire = fields.Monetary(string="Balance Hire (P + I)", compute='_compute_financials', store=True)
+    term_charges = fields.Monetary(string="Term Charges", compute='_compute_financials', store=True, readonly=True)
+    balance_hire = fields.Monetary(string="Balance Hire (P + I)", compute='_compute_financials', store=True, readonly=True)
 
     first_inst_amount = fields.Monetary(string="First Inst.", compute='_compute_installment_amounts', store=True, readonly=False)
     monthly_inst = fields.Monetary(string="Monthly Inst.", compute='_compute_installment_amounts', store=True, readonly=False)
@@ -203,7 +191,7 @@ class FinanceContract(models.Model):
     excess_mileage_rate = fields.Monetary(string="Excess Mileage Rate")
 
     supplier_id = fields.Many2one('res.partner', string="Supplier / Dealer",
-                                  domain="[('finance_partner_type', '=', 'supplier')]")
+                                  domain="[('finance_partner_type', '=', 'supplier')]" )
     supplier_code = fields.Char(related='supplier_id.ref', string="Supplier Code", readonly=False)
     commission = fields.Monetary(string="Commission")
 
@@ -255,83 +243,59 @@ class FinanceContract(models.Model):
     payment_count = fields.Integer(compute='_compute_payment_count', string="Payment Count")
     invoice_count = fields.Integer(compute='_compute_invoice_count', string="Invoice Count")
 
-    # Penalty Rule
     penalty_rule_id = fields.Many2one('finance.penalty.rule', string="Penalty Rule")
 
     total_overdue_days = fields.Integer(string="Days Overdue", compute='_compute_overdue_status', store=True)
     accrued_penalty = fields.Monetary(string="Accrued Penalty", currency_field='currency_id', default=0.0)
 
-    # 1. GUARANTORS (Multiple)
     guarantor_line_ids = fields.One2many('finance.contract.guarantor', 'contract_id', string="Guarantors")
-
-    # 2. CO-BORROWERS / JOINT HIRERS (Multiple)
     joint_hirer_line_ids = fields.One2many('finance.contract.joint.hirer', 'contract_id', string="Co-Borrowers")
 
     # --- Disbursement & Notices Tracking ---
+    disbursement_payment_id = fields.Many2one('account.payment', string="Disbursement Payment", readonly=True)
     disbursement_move_id = fields.Many2one('account.move', string="Disbursement Entry", readonly=True)
-
     date_reminder_sent = fields.Date(string="Reminder Notice Date", readonly=True)
     date_4th_sched_sent = fields.Date(string="4th Schedule Date", readonly=True)
     date_repo_order = fields.Date(string="Repossession Date", readonly=True)
     date_5th_sched_sent = fields.Date(string="5th Schedule Date", readonly=True)
 
     # --- Core Logic ---
-
     @api.depends('loan_amount')
     def _compute_hp_act(self):
         """Determine if HP Act applies based on configurable limit"""
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.hp_act_limit')], limit=1)
+        hp_limit = float(param.value) if param else 55000.0
         for rec in self:
-            # FIX: Use search() to find the parameter record manually
-            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.hp_act_limit')], limit=1)
-            
-            # If param exists, use its value; otherwise use default 55000.0
-            hp_limit = float(param.value) if param else 55000.0            
             rec.is_hp_act = (rec.loan_amount <= hp_limit)
 
     @api.depends('first_due_date', 'no_of_inst')
     def _compute_maturity_date(self):
         """Calculate contract maturity date"""
-        from dateutil.relativedelta import relativedelta
         for rec in self:
             if rec.first_due_date and rec.no_of_inst:
                 rec.maturity_date = rec.first_due_date + relativedelta(months=rec.no_of_inst.months - 1)
             else:
                 rec.maturity_date = False
-
-    @api.onchange('interest_type')
-    def _onchange_interest_type(self):
-        """Map CSV Interest Type to Internal Calculation Method"""
-        if self.interest_type == 'flat':
-            self.interest_method = 'flat' # Uses existing logic
-        elif self.interest_type == 'effective':
-            self.installment_type = 'annuity' # Uses standard amortization
             
     @api.onchange('product_id')
     def _onchange_product(self):
         if self.product_id:
             self.no_of_inst = False # Reset term when product changes
             self.penalty_rule_id = self.product_id.default_penalty_rule_id
-            # Auto-fill defaults from the Product itself
             self.int_rate_pa = self.product_id.default_int_rate
             self.residual_value_percent = self.product_id.default_rv_percentage
             self.mileage_limit = self.product_id.annual_mileage_limit
             self.excess_mileage_rate = self.product_id.excess_mileage_charge
             self._onchange_rv_percent()
-
-            # --- New Domain Logic ---
             prod = self.product_id
             term_domain = []
             if prod.min_months and prod.max_months and prod.step_months > 0:
                 valid_months = list(range(prod.min_months, prod.max_months + 1, prod.step_months))
                 term_domain = [('months', 'in', valid_months)]
             else:
-                # Fallback to default if no rules are set on the product
                 default_months = list(range(12, 121, 12))
                 term_domain = [('months', 'in', default_months)]
-
             return {'domain': {'no_of_inst': term_domain}}
-
-        # If no product is selected, don't show any options to force selection first
         return {'domain': {'no_of_inst': [('id', '=', False)]}}
 
     @api.onchange('residual_value_percent', 'cash_price')
@@ -350,6 +314,42 @@ class FinanceContract(models.Model):
             self.other_cost = self.other_cost_id.amount
 
     # --- Validation Constraints ---
+    @api.constrains('hirer_id', 'guarantor_line_ids', 'joint_hirer_line_ids')
+    def _check_partner_blacklist(self):
+        """Prevents using a blacklisted partner in a contract."""
+        for contract in self:
+            partners_to_check = contract.hirer_id
+            partners_to_check |= contract.guarantor_line_ids.mapped('partner_id')
+            partners_to_check |= contract.joint_hirer_line_ids.mapped('partner_id')
+            for partner in partners_to_check:
+                if partner.finance_blacklist:
+                    raise ValidationError(_("Partner '%s' is blacklisted for finance and cannot be a hirer, guarantor, or co-borrower.") % partner.name)
+
+    @api.constrains('product_id', 'loan_amount', 'no_of_inst', 'cash_price')
+    def _check_product_rules(self):
+        """Enforce financial product rules on the contract."""
+        for contract in self:
+            prod = contract.product_id
+            if not prod:
+                continue
+            if prod.min_finance_amount > 0 and contract.loan_amount < prod.min_finance_amount:
+                raise ValidationError(_("Loan amount must be at least %s.") % prod.min_finance_amount)
+            if prod.max_finance_amount > 0 and contract.loan_amount > prod.max_finance_amount:
+                raise ValidationError(_("Loan amount cannot exceed %s.") % prod.max_finance_amount)
+            if contract.cash_price > 0:
+                ltv = (contract.loan_amount / contract.cash_price) * 100
+                if prod.min_finance_percent > 0 and ltv < prod.min_finance_percent:
+                    raise ValidationError(_("Loan to Value ratio must be at least %s%%.") % prod.min_finance_percent)
+                if prod.max_finance_percent > 0 and ltv > prod.max_finance_percent:
+                    raise ValidationError(_("Loan to Value ratio cannot exceed %s%%.") % prod.max_finance_percent)
+            if contract.no_of_inst:
+                term_months = contract.no_of_inst.months
+                if prod.min_months > 0 and term_months < prod.min_months:
+                    raise ValidationError(_("Term must be at least %s months.") % prod.min_months)
+                if prod.max_months > 0 and term_months > prod.max_months:
+                    raise ValidationError(_("Term cannot exceed %s months.") % prod.max_months)
+                if prod.step_months > 0 and term_months % prod.step_months != 0:
+                    raise ValidationError(_("Term must be in multiples of %s months.") % prod.step_months)
 
     @api.constrains('product_id', 'agreement_date')
     def _check_product_validity(self):
@@ -362,21 +362,18 @@ class FinanceContract(models.Model):
 
     @api.constrains('down_payment', 'cash_price')
     def _check_down_payment(self):
-        """Validate down payment does not exceed cash price"""
         for rec in self:
             if rec.down_payment > rec.cash_price:
                 raise ValidationError(_("Down payment cannot exceed cash price."))
 
     @api.constrains('first_due_date', 'agreement_date')
     def _check_first_due_date(self):
-        """Validate first due date is not before agreement date"""
         for rec in self:
             if rec.first_due_date and rec.agreement_date and rec.first_due_date < rec.agreement_date:
                 raise ValidationError(_("First due date cannot be before agreement date."))
 
     @api.constrains('int_rate_pa')
     def _check_interest_rate(self):
-        """Validate interest rate is reasonable"""
         for rec in self:
             if rec.int_rate_pa < 0:
                 raise ValidationError(_("Interest rate cannot be negative."))
@@ -385,13 +382,11 @@ class FinanceContract(models.Model):
 
     @api.constrains('residual_value_percent')
     def _check_residual_value(self):
-        """Validate residual value percentage"""
         for rec in self:
             if rec.residual_value_percent < 0 or rec.residual_value_percent > 100:
                 raise ValidationError(_("Residual value percentage must be between 0 and 100."))
 
     # --- CRUD Operations ---
-
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -403,7 +398,7 @@ class FinanceContract(models.Model):
         trigger_fields = {
             'cash_price', 'down_payment', 'int_rate_pa', 'no_of_inst',
             'first_inst_amount', 'monthly_inst', 'last_inst_amount',
-            'interest_method', 'payment_scheme', 'first_due_date'
+            'interest_type', 'payment_scheme', 'first_due_date'
         }
         res = super().write(vals)
         if self.env.context.get('skip_schedule_generation'):
@@ -414,18 +409,70 @@ class FinanceContract(models.Model):
                     rec.with_context(skip_schedule_generation=True).action_generate_schedule()
         return res
 
-    # --- Computed Fields ---
+    def _cron_apply_late_penalties(self):
+        today = fields.Date.today()
+        contracts = self.search([
+            ('ac_status', '=', 'active'),
+            ('penalty_rule_id', '!=', False)
+        ])
+        for contract in contracts:
+            rule = contract.penalty_rule_id
+            overdue_lines = contract.line_ids.filtered(
+                lambda l: not l.paid_date and l.date_due < today - relativedelta(days=rule.grace_period_days)
+            )
+            for line in overdue_lines:
+                new_penalty = 0.0
+                apply_penalty = False
+                if rule.method == 'daily_percent':
+                    if line.penalty_last_applied_date != today:
+                        last_date = line.penalty_last_applied_date or line.date_due
+                        days_diff = (today - last_date).days
+                        if days_diff > 0:
+                            daily_rate = rule.rate / 36500
+                            new_penalty = line.amount_total * daily_rate * days_diff
+                            apply_penalty = True
+                elif rule.method == 'fixed_one_time':
+                    if not line.penalty_last_applied_date:
+                        new_penalty = rule.fixed_amount
+                        apply_penalty = True
+                elif rule.method == 'fixed_recurring':
+                    if not line.penalty_last_applied_date or \
+                       line.penalty_last_applied_date < today - relativedelta(months=1):
+                        new_penalty = rule.fixed_amount
+                        apply_penalty = True
+                if apply_penalty and new_penalty > 0:
+                    contract.balance_late_charges += new_penalty
+                    line.penalty_last_applied_date = today
+                    contract.message_post(
+                        body=_("Late penalty of %s applied for overdue installment #%s.") %
+                             (f"{contract.currency_id.symbol}{new_penalty:,.2f}", line.sequence)
+                    )
 
+    # --- Computed Fields ---
     def _compute_payment_count(self):
+        if not self: return
+        data = self.env['account.payment']._read_group(
+            domain=[('contract_id', 'in', self.ids)],
+            groupby=['contract_id'],
+            aggregates=['__count']
+        )
+        counts = {contract.id: count for contract, count in data}
         for rec in self:
-            rec.payment_count = self.env['account.payment'].search_count([('contract_id', '=', rec.id)])
+            rec.payment_count = counts.get(rec.id, 0)
 
     def _compute_invoice_count(self):
+        if not self: return
+        agreement_nos = [rec.agreement_no for rec in self if rec.agreement_no]
+        counts = {}
+        if agreement_nos:
+            data = self.env['account.move']._read_group(
+                domain=[('invoice_origin', 'in', agreement_nos), ('move_type', '=', 'out_invoice')],
+                groupby=['invoice_origin'],
+                aggregates=['__count']
+            )
+            counts = {origin: count for origin, count in data}
         for rec in self:
-            rec.invoice_count = self.env['account.move'].search_count([
-                ('invoice_origin', '=', rec.agreement_no),
-                ('move_type', '=', 'out_invoice')
-            ])
+            rec.invoice_count = counts.get(rec.agreement_no, 0)
 
     @api.depends('line_ids.invoice_id.payment_state')
     def _compute_payment_status(self):
@@ -440,23 +487,39 @@ class FinanceContract(models.Model):
             rec.balance_installment = rec.balance_hire - rec.total_inst_paid
             rec.os_balance = rec.balance_installment
             rec.total_payable = rec.os_balance + rec.balance_late_charges + rec.balance_misc_fee
+            
+    def _compute_overdue_status(self):
+        # Dummy method to prevent errors from the simplified file
+        for rec in self:
+            rec.total_overdue_days = 0
 
     # --- Status Actions ---
-
     def action_approve(self):
         for rec in self:
             rec.ac_status = 'active'
+            if rec.asset_id:
+                rec.asset_id.write({'status': 'financed'})
 
     def action_close(self):
         for rec in self:
             rec.ac_status = 'closed'
+            if rec.asset_id:
+                if rec.application_type in ['hp', 'floor_stock']:
+                    rec.asset_id.write({'status': 'sold'})
+                else:
+                    rec.asset_id.write({'status': 'available'})
+
+    def action_repo(self):
+        for rec in self:
+            rec.ac_status = 'repo'
+            if rec.asset_id:
+                rec.asset_id.write({'status': 'repo'})
 
     def action_draft(self):
         for rec in self:
             rec.ac_status = 'draft'
 
     # --- View Actions ---
-
     def action_view_payments(self):
         self.ensure_one()
         return {

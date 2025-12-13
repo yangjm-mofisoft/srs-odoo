@@ -37,6 +37,9 @@ class FinanceDisbursementWizard(models.TransientModel):
                 # Pre-fill fees if fields exist on contract, else 0
                 'processing_fee': contract.admin_fee or 0.0,
             })
+            journal_param = self.env['ir.config_parameter'].sudo().get_param('asset_finance.disbursement_journal_id')
+            if journal_param and journal_param != 'False':
+                res['journal_id'] = int(journal_param)
         return res
 
     @api.depends('amount_principal', 'amount_interest')
@@ -54,135 +57,63 @@ class FinanceDisbursementWizard(models.TransientModel):
     def action_confirm_disbursement(self):
         self.ensure_one()
         contract = self.contract_id
+        if contract.disbursement_move_id:
+            raise UserError(_("Disbursement already processed for this contract."))
 
         if not contract.asset_account_id or not contract.unearned_interest_account_id:
-            raise UserError("Please configure the Asset and Unearned Interest accounts on the Contract.")
+            raise UserError(_("Please configure the Asset and Unearned Interest accounts on the contract."))
 
-        # Get account configuration
-        try:
-            account_config = self.env['finance.account.config'].get_config()
-        except UserError:
-            raise UserError(
-                "Finance Account Configuration not found. "
-                "Please configure account mapping under Finance > Configuration > Account Mapping."
-            )
+        journal = self.journal_id
+        payment_method_line = journal.outbound_payment_method_line_ids[:1]
+        if not payment_method_line:
+            raise UserError(_("Journal %s has no outbound payment method configured.") % journal.display_name)
 
-        move_lines = []
-        name = f"Disbursement for {contract.agreement_no}"
+        partner = contract.supplier_id or contract.hirer_id
+        if not partner:
+            raise UserError(_("Please set a supplier or hirer partner on the contract."))
 
-        # 1. DEBIT: HP Debtors (Gross Amount: Principal + Interest)
-        move_lines.append((0, 0, {
-            'name': f"{name} - HP Debtors (Gross)",
-            'account_id': contract.asset_account_id.id,
-            'debit': self.amount_gross,
-            'credit': 0.0,
-            'partner_id': contract.hirer_id.id,
-        }))
-
-        # 2. CREDIT: Unearned Interest (Interest Portion)
-        move_lines.append((0, 0, {
-            'name': f"{name} - Unearned Interest",
-            'account_id': contract.unearned_interest_account_id.id,
-            'debit': 0.0,
-            'credit': self.amount_interest,
-        }))
-
-        # 3. DEBIT: HP Debtors - Others Charges (for Processing Fee + GST)
-        # This creates an AR for the processing fee that offsets the net payout
-        if self.processing_fee > 0 or self.processing_fee_tax > 0:
-            # Use configured HP Charges account
-            if not account_config.hp_charges_account_id:
-                raise UserError(
-                    "HP Charges account not configured. "
-                    "Please configure it under Finance > Configuration > Account Mapping."
-                )
-
-            total_charges = self.processing_fee + self.processing_fee_tax
-            move_lines.append((0, 0, {
-                'name': "Processing Fee + GST (AR)",
-                'account_id': account_config.hp_charges_account_id.id,
-                'debit': total_charges,
-                'credit': 0.0,
-                'partner_id': contract.hirer_id.id,
-            }))
-
-        # 4. CREDIT: Processing Fee Income
-        if self.processing_fee > 0:
-            # Use configured Processing Fee Income account
-            if not account_config.processing_fee_income_account_id:
-                raise UserError(
-                    "Processing Fee Income account not configured. "
-                    "Please configure it under Finance > Configuration > Account Mapping."
-                )
-
-            move_lines.append((0, 0, {
-                'name': "Hire Purchase Processing Fee",
-                'account_id': account_config.processing_fee_income_account_id.id,
-                'debit': 0.0,
-                'credit': self.processing_fee,
-            }))
-
-        # 5. CREDIT: GST Output Tax
-        if self.processing_fee_tax > 0:
-            # Use configured GST Output account
-            if not account_config.gst_output_account_id:
-                raise UserError(
-                    "GST Output Tax account not configured. "
-                    "Please configure it under Finance > Configuration > Account Mapping."
-                )
-
-            move_lines.append((0, 0, {
-                'name': "GST on Processing Fee",
-                'account_id': account_config.gst_output_account_id.id,
-                'debit': 0.0,
-                'credit': self.processing_fee_tax,
-            }))
-
-        # 6. CREDIT: Bank (Net Payout)
-        if self.amount_net > 0:
-            if not self.journal_id.default_account_id:
-                raise UserError(f"Journal {self.journal_id.name} has no default account.")
-                
-            move_lines.append((0, 0, {
-                'name': f"{name} - Net Payout to Dealer",
-                'account_id': self.journal_id.default_account_id.id,
-                'debit': 0.0,
-                'credit': self.amount_net,
-                'partner_id': contract.supplier_id.id,
-            }))
-
-        # Validation: Check balance
-        total_deb = sum(l[2]['debit'] for l in move_lines)
-        total_cred = sum(l[2]['credit'] for l in move_lines)
-        if round(total_deb, 2) != round(total_cred, 2):
-             # Add a balancing line for Advance Payment if needed
-             # If Advance Payment was deducted, we credit the Asset Account (Installment Contra)
-             diff = total_deb - total_cred
-             if self.advance_payment > 0 and abs(diff - self.advance_payment) < 0.01:
-                 move_lines.append((0, 0, {
-                    'name': "Advance Installment Deduction",
-                    'account_id': contract.asset_account_id.id, # Crediting the debtor
-                    'debit': 0.0,
-                    'credit': diff,
-                 }))
-
-        # Create Journal Entry
-        move = self.env['account.move'].create({
-            'ref': name,
+        payment_vals = {
+            'payment_type': 'outbound',
+            'partner_type': 'supplier' if partner == contract.supplier_id else 'customer',
+            'partner_id': partner.id,
+            'amount': self.amount_net,
+            'currency_id': contract.currency_id.id,
             'date': self.disbursement_date,
-            'journal_id': self.journal_id.id,
-            'move_type': 'entry',
-            'line_ids': move_lines,
-        })
-        move.action_post()
+            'journal_id': journal.id,
+            'payment_method_line_id': payment_method_line.id,
+            'ref': f"Disbursement {contract.agreement_no}",
+            'contract_id': contract.id,
+            'is_finance_disbursement': True,
+            'disbursement_principal': self.amount_principal,
+            'disbursement_interest': self.amount_interest,
+            'disbursement_processing_fee': self.processing_fee,
+            'disbursement_processing_fee_tax': self.processing_fee_tax,
+            'disbursement_advance_payment': self.advance_payment,
+            'disbursement_admin_fee': 0.0,
+            'disbursement_commission': contract.commission or 0.0,
+        }
 
-        # Link to Contract
-        contract.disbursement_move_id = move.id
-        
+        payment = self.env['account.payment'].create(payment_vals)
+        payment.action_post()
+
+        contract.disbursement_payment_id = payment.id
+        contract.disbursement_move_id = payment.move_id.id
+        contract.ac_status = 'active'
+        contract.message_post(
+            body=_("Disbursement Payment %s created: %s%s (Net Payout %s%s)")
+                 % (
+                     payment.name,
+                     contract.currency_id.symbol,
+                     f"{self.amount_principal:,.2f}",
+                     contract.currency_id.symbol,
+                     f"{self.amount_net:,.2f}"
+                 )
+        )
+
         return {
-            'name': 'Disbursement Entry',
+            'name': _('Disbursement Payment'),
             'type': 'ir.actions.act_window',
-            'res_model': 'account.move',
-            'res_id': move.id,
+            'res_model': 'account.payment',
+            'res_id': payment.id,
             'view_mode': 'form',
         }

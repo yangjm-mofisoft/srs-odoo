@@ -15,6 +15,7 @@
         'data/finance_term_data.xml',
         'data/account_chart_data.xml',
         'data/account_config_data.xml',
+        'data/default_config_data.xml',
         'data/mail_templates.xml',
 
         # --- 1. DEFINE ACTIONS FIRST ---
@@ -25,7 +26,6 @@
         'views/res_partner_views.xml',
         'views/product_views.xml',
         'views/penalty_views.xml',
-        'views/account_config_views.xml',
         'views/fleet_vehicle_views.xml',
         'views/contract_views.xml',
         'wizard/settlement_views.xml',
@@ -33,9 +33,11 @@
         'views/account_payment_views.xml',
 
         # --- 2. DEFINE MAIN MENU STRUCTURE ---
-        'views/menu_views.xml',  # Creates 'menu_finance_config'
+        'views/menu_views.xml',  # Creates 'menu_finance_config' and 'menu_finance_master'
 
         # --- 3. ADD ITEMS TO THAT STRUCTURE ---
+        'views/fleet_menus.xml',               # Adds 'Vehicle Makes & Models' to 'menu_finance_master'
+        'views/account_config_views.xml',      # Adds 'Account Mapping' to 'menu_finance_config'
         'views/partner_menus.xml',
         'views/access_rights_views.xml',       # Adds 'Security' to 'menu_finance_config'
         'views/res_config_settings_views.xml', # Adds 'Settings' to 'menu_finance_config'

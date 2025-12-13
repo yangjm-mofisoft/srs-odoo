@@ -83,7 +83,7 @@ settlement = outstanding_principal + rebate + penalties
 ```
 
 **Uses Config Parameters**:
-- `asset_finance.settlement_rebate_fee` (default: 20%)
+- `asset_finance.settlement_rebate_fee_pct` (default: 20%)
 
 ---
 

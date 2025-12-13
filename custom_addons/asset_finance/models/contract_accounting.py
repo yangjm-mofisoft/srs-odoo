@@ -12,7 +12,7 @@ class FinanceContract(models.Model):
         """Open disbursement wizard"""
         self.ensure_one()
         if self.disbursement_move_id:
-            raise UserError(_("Disbursement Entry already created!"))
+            raise UserError(_("Disbursement already created for this contract."))
 
         return {
             'name': 'Disbursement',
@@ -25,120 +25,73 @@ class FinanceContract(models.Model):
 
     def create_disbursement_entry(self, disbursement_date, payment_method_id, bank_account_id=None):
         """
-        Create the disbursement journal entry
-        Called from disbursement wizard
-
-        Accounting Entry:
-        Dr. Finance Asset/Receivable Account    [Loan Amount]
-        Dr. Supplier Account (Commission)       [Commission]
-        Dr. Admin Fee Expense                   [Admin Fee]
-            Cr. Bank/Cash Account               [Total Disbursed]
-            Cr. Unearned Interest               [Term Charges]
+        Legacy helper kept for tests – now routes through account.payment
         """
         self.ensure_one()
 
         if self.disbursement_move_id:
             raise UserError(_("Disbursement already processed!"))
 
-        # Get journal for disbursements (should be Bank/Cash journal)
-        journal = self.env['account.journal'].search([
-            ('type', 'in', ['bank', 'cash']),
-            ('company_id', '=', self.env.company.id)
-        ], limit=1)
-
+        journal = self.env['account.journal'].browse(payment_method_id)
         if not journal:
-            raise UserError(_("No Bank or Cash journal found. Please configure accounting journals."))
+            raise UserError(_("Please pass a valid bank journal ID to create the disbursement payment."))
 
-        # Prepare line items
-        line_items = []
+        payment_method_line = journal.outbound_payment_method_line_ids[:1]
+        if not payment_method_line:
+            raise UserError(_("Journal %s has no outbound payment method configured.") % journal.display_name)
 
-        # 1. Debit: Finance Asset/Receivable (Loan Amount)
-        line_items.append((0, 0, {
-            'name': f'Disbursement - {self.agreement_no} (Principal)',
-            'account_id': self.asset_account_id.id,
-            'debit': self.loan_amount,
-            'credit': 0,
-            'partner_id': self.hirer_id.id,
-        }))
-
-        # 2. Credit: Unearned Interest (Liability)
-        if self.term_charges > 0:
-            line_items.append((0, 0, {
-                'name': f'Unearned Interest - {self.agreement_no}',
-                'account_id': self.unearned_interest_account_id.id,
-                'debit': 0,
-                'credit': self.term_charges,
-            }))
-
-        # 3. Debit: Commission to Supplier (if any)
-        if self.commission > 0 and self.supplier_id:
-            commission_account = self.supplier_id.property_account_payable_id
-            line_items.append((0, 0, {
-                'name': f'Commission - {self.agreement_no}',
-                'account_id': commission_account.id,
-                'debit': 0,
-                'credit': self.commission,
-                'partner_id': self.supplier_id.id,
-            }))
-
-        # 4. Debit: Admin Fee (if any)
-        if self.admin_fee > 0:
-            # Use a configured expense account for admin fees
-            param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'asset_finance.admin_fee_account_id')], limit=1)
-            admin_fee_account = param.value if param else False
-            if admin_fee_account:
-                line_items.append((0, 0, {
-                    'name': f'Admin Fee - {self.agreement_no}',
-                    'account_id': int(admin_fee_account),
-                    'debit': self.admin_fee,
-                    'credit': 0,
-                }))
-
-        # 5. Credit: Bank/Cash (Total paid out)
-        total_disbursed = self.loan_amount - self.commission - self.admin_fee
-        if bank_account_id:
-            bank_account = self.env['account.account'].browse(bank_account_id)
-        else:
-            bank_account = journal.default_account_id
-
-        line_items.append((0, 0, {
-            'name': f'Cash Disbursement - {self.agreement_no}',
-            'account_id': bank_account.id,
-            'debit': 0,
-            'credit': total_disbursed,
-            'partner_id': self.hirer_id.id,
-        }))
-
-        # Create Journal Entry
-        move = self.env['account.move'].create({
-            'move_type': 'entry',
-            'journal_id': journal.id,
+        net_amount = self.loan_amount - self.commission - self.admin_fee
+        payment_vals = {
+            'payment_type': 'outbound',
+            'partner_type': 'supplier' if self.supplier_id else 'customer',
+            'partner_id': (self.supplier_id or self.hirer_id).id,
+            'amount': net_amount,
+            'currency_id': self.currency_id.id,
             'date': disbursement_date,
-            'ref': f'Disbursement for {self.agreement_no}',
-            'line_ids': line_items,
-        })
+            'journal_id': journal.id,
+            'payment_method_line_id': payment_method_line.id,
+            'ref': f"Disbursement {self.agreement_no}",
+            'contract_id': self.id,
+            'is_finance_disbursement': True,
+            'disbursement_principal': self.loan_amount,
+            'disbursement_interest': self.term_charges,
+            'disbursement_processing_fee': 0.0,
+            'disbursement_processing_fee_tax': 0.0,
+            'disbursement_advance_payment': 0.0,
+            'disbursement_admin_fee': self.admin_fee,
+            'disbursement_commission': self.commission,
+        }
 
-        # Post the entry
-        move.action_post()
+        payment = self.env['account.payment'].create(payment_vals)
+        payment.action_post()
 
-        # Link to contract
-        self.disbursement_move_id = move.id
+        self.disbursement_payment_id = payment.id
+        self.disbursement_move_id = payment.move_id.id
         self.ac_status = 'active'
 
-        # Log in chatter
         self.message_post(
-            body=f"Disbursement Entry created: {move.name}<br/>"
-                 f"Amount: {self.currency_id.symbol}{total_disbursed:,.2f}<br/>"
+            body=f"Disbursement Payment created: {payment.name}<br/>"
+                 f"Net Amount: {self.currency_id.symbol}{net_amount:,.2f}<br/>"
                  f"Date: {disbursement_date}"
         )
 
-        return move
+        return payment.move_id
 
     def action_view_disbursement(self):
-        """Open the disbursement journal entry"""
+        """Open the disbursement payment/move"""
         self.ensure_one()
         if not self.disbursement_move_id:
             raise UserError(_("No disbursement entry found for this contract."))
+
+        if self.disbursement_payment_id:
+            return {
+                'name': _('Disbursement Payment'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'account.payment',
+                'res_id': self.disbursement_payment_id.id,
+                'view_mode': 'form',
+                'target': 'current',
+            }
 
         return {
             'name': 'Disbursement Entry',
@@ -301,10 +254,13 @@ class FinanceContract(models.Model):
                 continue
 
             # Create interest recognition journal entry
-            journal = self.env['account.journal'].search([
-                ('type', '=', 'general'),
-                ('company_id', '=', contract.env.company.id)
-            ], limit=1)
+            journal_param = self.env['ir.config_parameter'].sudo().get_param('asset_finance.interest_recognition_journal_id')
+            journal = self.env['account.journal'].browse(int(journal_param)) if journal_param and journal_param != 'False' else False
+            if not journal:
+                journal = self.env['account.journal'].search([
+                    ('type', '=', 'general'),
+                    ('company_id', '=', contract.env.company.id)
+                ], limit=1)
 
             move = self.env['account.move'].create({
                 'move_type': 'entry',

@@ -4,7 +4,7 @@
     <menuitem id="menu_finance_root"
               name="Asset Finance"
               sequence="10"
-              web_icon="base,static/description/icon.png"
+              web_icon="fa-car"
               groups="asset_finance.group_finance_officer,asset_finance.group_finance_manager,asset_finance.group_collection_staff"/>
 
     <menuitem id="menu_finance_dashboard" name="Dashboard" parent="menu_finance_root"

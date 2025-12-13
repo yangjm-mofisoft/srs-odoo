@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools import float_is_zero
 
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
@@ -16,6 +17,15 @@ class AccountPayment(models.Model):
     allocated_to_principal = fields.Monetary(string="Allocated to Principal", compute='_compute_allocations', store=True)
     allocated_to_interest = fields.Monetary(string="Allocated to Interest", compute='_compute_allocations', store=True)
 
+    is_finance_disbursement = fields.Boolean(string="Asset Finance Disbursement", default=False)
+    disbursement_principal = fields.Monetary(string="Disbursement Principal", currency_field='currency_id')
+    disbursement_interest = fields.Monetary(string="Disbursement Interest", currency_field='currency_id')
+    disbursement_processing_fee = fields.Monetary(string="Processing Fee", currency_field='currency_id')
+    disbursement_processing_fee_tax = fields.Monetary(string="Processing Fee Tax", currency_field='currency_id')
+    disbursement_advance_payment = fields.Monetary(string="Advance Installment Deduction", currency_field='currency_id')
+    disbursement_admin_fee = fields.Monetary(string="Admin Fee", currency_field='currency_id')
+    disbursement_commission = fields.Monetary(string="Supplier Commission", currency_field='currency_id')
+
     @api.depends('payment_allocation_ids.amount')
     def _compute_allocations(self):
         for payment in self:
@@ -30,8 +40,156 @@ class AccountPayment(models.Model):
         for payment in self:
             if payment.contract_id and payment.payment_type == 'inbound':
                 payment._allocate_payment_to_contract()
+            if payment.is_finance_disbursement and payment.contract_id:
+                payment.contract_id.disbursement_payment_id = payment.id
+                payment.contract_id.disbursement_move_id = payment.move_id.id
+                payment.contract_id.message_post(
+                    body=_("Disbursement Payment %s posted for %s.")
+                         % (payment.name, payment.contract_id.agreement_no)
+                )
 
         return res
+
+    def _prepare_payment_moves(self):
+        moves = super()._prepare_payment_moves()
+        for payment, move_vals in zip(self, moves):
+            if not payment.is_finance_disbursement:
+                continue
+            line_vals = payment._prepare_finance_disbursement_move_lines()
+            move_vals['line_ids'] = line_vals
+            move_vals['move_type'] = 'entry'
+        return moves
+
+    def _prepare_finance_disbursement_move_lines(self):
+        self.ensure_one()
+        contract = self.contract_id
+        if not contract:
+            raise UserError(_("Finance disbursement payments must be linked to a contract."))
+        if not contract.asset_account_id or not contract.unearned_interest_account_id:
+            raise UserError(_("Please configure the asset and unearned interest accounts on the contract."))
+
+        account_config = self.env['finance.account.config'].get_config()
+
+        partner_hirer = contract.hirer_id
+        partner_supplier = self.partner_id
+
+        amount_principal = self.disbursement_principal
+        amount_interest = self.disbursement_interest
+        processing_fee = self.disbursement_processing_fee
+        processing_fee_tax = self.disbursement_processing_fee_tax
+        advance_payment = self.disbursement_advance_payment
+        admin_fee = self.disbursement_admin_fee
+        commission = self.disbursement_commission
+
+        gross_amount = amount_principal + amount_interest
+        total_charges = processing_fee + processing_fee_tax
+
+        lines = []
+        currency = self.currency_id or self.company_id.currency_id
+
+        def _line(name, account, debit=0.0, credit=0.0, partner=False):
+            vals = {
+                'name': name,
+                'account_id': account.id,
+                'debit': debit,
+                'credit': credit,
+                'partner_id': partner.id if partner else False,
+            }
+            if currency and currency != self.company_id.currency_id:
+                vals.update({
+                    'currency_id': currency.id,
+                    'amount_currency': debit - credit,
+                })
+            return (0, 0, vals)
+
+        lines.append(_line(
+            _("Disbursement - Principal & Interest %s") % contract.agreement_no,
+            contract.asset_account_id,
+            debit=gross_amount,
+            partner=partner_hirer
+        ))
+
+        if amount_interest:
+            lines.append(_line(
+                _("Unearned Interest %s") % contract.agreement_no,
+                contract.unearned_interest_account_id,
+                credit=amount_interest
+            ))
+
+        if total_charges:
+            if not account_config.hp_charges_account_id:
+                raise UserError(_("HP Charges account is not configured."))
+            lines.append(_line(
+                _("Processing Fee + Tax AR"),
+                account_config.hp_charges_account_id,
+                debit=total_charges,
+                partner=partner_hirer
+            ))
+
+        if processing_fee:
+            if not account_config.processing_fee_income_account_id:
+                raise UserError(_("Processing Fee Income account is not configured."))
+            lines.append(_line(
+                _("Processing Fee Income"),
+                account_config.processing_fee_income_account_id,
+                credit=processing_fee
+            ))
+
+        if processing_fee_tax:
+            if not account_config.gst_output_account_id:
+                raise UserError(_("GST Output account is not configured."))
+            lines.append(_line(
+                _("GST on Processing Fee"),
+                account_config.gst_output_account_id,
+                credit=processing_fee_tax
+            ))
+
+        if admin_fee:
+            admin_fee_account_id = self.env['ir.config_parameter'].sudo().get_param('asset_finance.admin_fee_account_id')
+            if not admin_fee_account_id or admin_fee_account_id == 'False':
+                raise UserError(_("Admin fee account is not configured in settings."))
+            admin_fee_account = self.env['account.account'].browse(int(admin_fee_account_id))
+            lines.append(_line(
+                _("Admin Fee Expense"),
+                admin_fee_account,
+                debit=admin_fee
+            ))
+
+        if commission and contract.supplier_id:
+            commission_account = contract.supplier_id.property_account_payable_id
+            if not commission_account:
+                raise UserError(_("Supplier %s is missing a payable account.") % contract.supplier_id.display_name)
+            lines.append(_line(
+                _("Supplier Commission"),
+                commission_account,
+                credit=commission,
+                partner=contract.supplier_id
+            ))
+
+        liquidity_account = self.journal_id.default_account_id
+        if not liquidity_account:
+            raise UserError(_("Journal %s has no default account configured.") % self.journal_id.display_name)
+
+        lines.append(_line(
+            _("Net Payout %s") % contract.agreement_no,
+            liquidity_account,
+            credit=self.amount,
+            partner=partner_supplier
+        ))
+
+        total_debit = sum(l[2]['debit'] for l in lines)
+        total_credit = sum(l[2]['credit'] for l in lines)
+        diff = total_debit - total_credit
+        if not float_is_zero(diff, precision_rounding=self.currency_id.rounding if self.currency_id else self.company_id.currency_id.rounding):
+            lines.append(_line(
+                _("Advance/Adjustment"),
+                contract.asset_account_id,
+                credit=diff if diff > 0 else 0.0,
+                debit=-diff if diff < 0 else 0.0,
+                partner=partner_hirer
+            ))
+
+        return lines
 
     def _allocate_payment_to_contract(self):
         """

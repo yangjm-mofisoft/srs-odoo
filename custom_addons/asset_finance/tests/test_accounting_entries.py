@@ -248,8 +248,8 @@ class TestAccountingEntries(AssetFinanceTestCommon):
         action = contract.action_view_disbursement()
 
         self.assertEqual(action['type'], 'ir.actions.act_window')
-        self.assertEqual(action['res_model'], 'account.move')
-        self.assertEqual(action['res_id'], contract.disbursement_move_id.id)
+        self.assertEqual(action['res_model'], 'account.payment')
+        self.assertEqual(action['res_id'], contract.disbursement_payment_id.id)
 
     def test_11_disbursement_link_stored(self):
         """Test disbursement move_id is stored on contract"""

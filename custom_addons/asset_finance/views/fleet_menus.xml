@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Custom List View for Vehicle Makes with pagination -->
+    <record id="view_fleet_vehicle_model_brand_list" model="ir.ui.view">
+        <field name="name">fleet.vehicle.model.brand.list</field>
+        <field name="model">fleet.vehicle.model.brand</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Makes" limit="20" create="true" delete="true">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Custom List View for Vehicle Models -->
+    <record id="view_fleet_vehicle_model_list" model="ir.ui.view">
+        <field name="name">fleet.vehicle.model.list</field>
+        <field name="model">fleet.vehicle.model</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Models" editable="bottom" create="true" delete="true">
+                <field name="brand_id"/>
+                <field name="name"/>
+                <field name="engine_capacity"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Custom Form View for Vehicle Model -->
+    <record id="view_fleet_vehicle_model_form" model="ir.ui.view">
+        <field name="name">fleet.vehicle.model.form</field>
+        <field name="model">fleet.vehicle.model</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Model">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="brand_id" options="{'no_open': True}"/>
+                            <field name="name" string="Model Name"/>
+                            <field name="engine_capacity"/>
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1" placeholder="Add notes about this vehicle model..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Unified Vehicle Make & Model Form View -->
+    <record id="view_vehicle_make_model_form" model="ir.ui.view">
+        <field name="name">vehicle.make.model.form</field>
+        <field name="model">fleet.vehicle.model.brand</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Makes &amp; Models">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" string="Make Name"/>
+                            <field name="country_id" options="{'no_open': True, 'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1" placeholder="Add notes about this vehicle make..."/>
+                    </group>
+                    <notebook>
+                        <page string="Models">
+                            <field name="model_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="engine_capacity"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vehicle Makes & Models Action (unified) -->
+    <record id="action_fleet_vehicle_make_model" model="ir.actions.act_window">
+        <field name="name">Vehicle Makes &amp; Models</field>
+        <field name="res_model">fleet.vehicle.model.brand</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_fleet_vehicle_model_brand_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_vehicle_make_model_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Vehicle Make
+            </p>
+            <p>
+                Add vehicle makes (brands) and their models here.
+                Click on a make to manage its models.
+            </p>
+        </field>
+    </record>
+
+    <!-- Single menu item for unified Makes & Models -->
+    <menuitem id="menu_vehicle_make_model"
+              name="Vehicle Makes &amp; Models"
+              parent="menu_finance_master"
+              action="action_fleet_vehicle_make_model"
+              sequence="11"/>
+
+</odoo>

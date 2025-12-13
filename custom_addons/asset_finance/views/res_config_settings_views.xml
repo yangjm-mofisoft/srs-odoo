@@ -10,6 +10,48 @@
             <xpath expr="//form" position="inside">
                 <app name="asset_finance" string="Asset Finance">
 
+                    <!-- Asset Configuration -->
+                    <block title="Asset Configuration">
+                        <setting id="supported_asset_types_setting">
+                            <label for="support_asset_type_vehicle" string="Supported Asset Types"/>
+                            <div class="text-muted">
+                                Select which asset types are supported in this system.
+                            </div>
+                            <div class="content-group mt16">
+                                <div class="row">
+                                    <div class="col-lg-3"/>
+                                    <div class="col-lg-9">
+                                        <field name="support_asset_type_vehicle" class="oe_inline"/>
+                                        <label for="support_asset_type_vehicle" class="oe_inline"/>
+                                        <br/>
+                                        <field name="support_asset_type_equipment" class="oe_inline"/>
+                                        <label for="support_asset_type_equipment" class="oe_inline"/>
+                                        <br/>
+                                        <field name="support_asset_type_property" class="oe_inline"/>
+                                        <label for="support_asset_type_property" class="oe_inline"/>
+                                        <br/>
+                                        <field name="support_asset_type_other" class="oe_inline"/>
+                                        <label for="support_asset_type_other" class="oe_inline"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting id="asset_type_default_setting">
+                            <label for="asset_type_default" string="Default Asset Type"/>
+                            <div class="text-muted">
+                                The asset type that will be pre-selected when creating a new asset.
+                                This must be one of the supported asset types checked above.
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="asset_type_default" class="col-lg-3 o_light_label"/>
+                                    <field name="asset_type_default" class="oe_inline" required="1"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
                     <!-- Financial Parameters -->
                     <block title="Financial Parameters">
                         <setting id="hp_act_limit_setting">
@@ -91,6 +133,23 @@
 
                     <!-- Accounting Configuration -->
                     <block title="Accounting Configuration">
+                        <setting id="journal_config_setting">
+                            <label for="disbursement_journal_id" string="Journals Configuration"/>
+                            <div class="text-muted">
+                                Set default journals for asset finance operations.
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="disbursement_journal_id" class="col-lg-3 o_light_label"/>
+                                    <field name="disbursement_journal_id" class="oe_inline"/>
+                                </div>
+                                <div class="row">
+                                    <label for="interest_recognition_journal_id" class="col-lg-3 o_light_label"/>
+                                    <field name="interest_recognition_journal_id" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </setting>
+
                         <setting id="admin_fee_account_setting">
                             <label for="admin_fee_account_id" string="Admin Fee Expense Account"/>
                             <div class="text-muted">

@@ -4,41 +4,68 @@ from odoo.exceptions import ValidationError
 class FinanceAsset(models.Model):
     _name = 'finance.asset'
     _description = 'Financed Asset'
-    _inherit = ['mail.thread', 'mail.activity.mixin'] # Added tracking
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'display_name'
 
     # --- 1. COMMON IDENTIFIERS ---
     name = fields.Char(string="Asset Name", required=True, help="e.g. Toyota Camry 2023")
     internal_ref = fields.Char(string="Internal Asset Code")
-    
-    asset_type = fields.Selection([
-        ('vehicle', 'Vehicle'),
-        ('equipment', 'Equipment'),
-        ('property', 'Property'),
-        ('other', 'Other')
-    ], string="Asset Type", required=True, default='vehicle')
+
+    @api.model
+    def _get_default_asset_type(self):
+        """Fetch default asset type from system settings"""
+        key = 'asset_finance.default_asset_type'
+        default_value = 'vehicle'
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', key)], limit=1)
+        return param.value if param else default_value
+
+    @api.model
+    def _get_asset_type_selection(self):
+        """Dynamically generate asset type selection based on configuration"""
+        key = 'asset_finance.supported_asset_types'
+        default_value = 'vehicle'
+        param = self.env['ir.config_parameter'].sudo().search([('key', '=', key)], limit=1)
+        supported_str = param.value if param else default_value
+        supported = [s.strip() for s in supported_str.split(',')]
+        all_types = {'vehicle': 'Vehicle', 'equipment': 'Equipment', 'property': 'Property', 'other': 'Other'}
+        return [(key, all_types[key]) for key in supported if key in all_types] or [('vehicle', 'Vehicle')]
+
+    asset_type = fields.Selection(
+        selection='_get_asset_type_selection',
+        string="Asset Type",
+        default=_get_default_asset_type,
+        required=True,
+        help="Type of asset being financed"
+    )
 
     # --- 2. GENERIC FIELDS ---
     serial_no = fields.Char(string="Serial No.", tracking=True)
     description = fields.Text(string="Description / Notes")
+
+    # --- 3. VEHICLE SPECIFIC ---
+    # Link to the master Fleet Vehicle record. This is the single source of truth.
+    vehicle_id = fields.Many2one('fleet.vehicle', string="Fleet Vehicle Record",
+                                 copy=False, help="Auto-managed link to the single source of truth in the Fleet module.")
+
+    # Vehicle fields are now related to the fleet.vehicle model.
+    # This makes fleet.vehicle the single source of truth.
+    registration_no = fields.Char(related='vehicle_id.license_plate', readonly=False, store=True, string="Registration No / ID", tracking=True)
+    chassis_no = fields.Char(related='vehicle_id.vin_sn', readonly=False, store=True, string="Chassis No / VIN", tracking=True)
     
-    # --- 3. VEHICLE SPECIFIC (Smart Link Polymorphism Strategy) ---
-    # For Vehicles: We link to Odoo's standard Fleet module
-    vehicle_id = fields.Many2one('fleet.vehicle', string="Vehicle Record",
-                                 help="Link to a vehicle record in the Fleet module for detailed vehicle specs.")
+    # Note: The UX for selecting Make/Model changes. User selects a model, and make is auto-filled.
+    vehicle_model_id = fields.Many2one(related='vehicle_id.model_id', readonly=False, store=True, string="Model")
+    vehicle_make_id = fields.Many2one(related='vehicle_id.model_id.brand_id', readonly=True, store=True, string="Make")
 
-    # For Others: We might link to Account Asset or Product (Optional)
-    # product_id = fields.Many2one('product.product', string="Equipment Product")
+    engine_no = fields.Char(related='vehicle_id.engine_no', readonly=False, store=True, string="Engine No")
+    # The 'engine_capacity' and 'year_manufacture' fields do not exist on the standard Odoo 16+ fleet.vehicle model.
+    # Kept as local fields. Add to fleet model if needed.
+    engine_capacity = fields.Char(string="Engine Capacity")
+    year_manufacture = fields.Integer(string="Year of Manufacture")
 
-    # Smart Fields - All readonly, computed from vehicle_id
-    registration_no = fields.Char(string="Registration No / ID", compute='_compute_details', store=True, readonly=True, tracking=True)
-    chassis_no = fields.Char(string="Chassis No", compute='_compute_details', store=True, readonly=True)
-    make = fields.Char(string="Make", compute='_compute_details', store=True, readonly=True)
-    model = fields.Char(string="Model", compute='_compute_details', store=True, readonly=True)
+    vehicle_color = fields.Char(related='vehicle_id.color', readonly=False, store=True, string="Vehicle Color")
+    vehicle_condition = fields.Selection(related='vehicle_id.vehicle_condition', readonly=False, store=True, string="Vehicle Condition")
 
-    # Generic Vehicle Details - All readonly, computed from vehicle_id
-    engine_no = fields.Char(string="Engine No", compute='_compute_details', store=True, readonly=True)
-    engine_capacity = fields.Char(string="Engine Capacity", compute='_compute_details', store=True, readonly=True)
+    # This field is specific to the finance workflow, so it remains a local field.
     vehicle_type = fields.Selection([
         ('passenger', 'Passenger'),
         ('commercial', 'Commercial'),
@@ -46,10 +73,6 @@ class FinanceAsset(models.Model):
         ('bus', 'Bus'),
         ('goods', 'Goods Vehicle')
     ], string="Vehicle Type")
-    year_manufacture = fields.Integer(string="Year of Manufacture", compute='_compute_details', store=True, readonly=True)
-    vehicle_color = fields.Char(string="Vehicle Color", compute='_compute_details', store=True, readonly=True)
-    vehicle_condition = fields.Selection([('new', 'New'), ('used', 'Used')], string="Vehicle Condition",
-                                         compute='_compute_details', store=True, readonly=True)
     no_of_transfers = fields.Integer(string="Number of Transfers")
     
     # --- 4. STATUS & SYSTEM ---
@@ -61,37 +84,17 @@ class FinanceAsset(models.Model):
         ('sold', 'Sold'),
         ('writeoff', 'Written-off')
     ], string="Status", default='available', tracking=True)
-    # Computed field for easy identification
     display_name = fields.Char(compute='_compute_display_name', store=True)
 
-    @api.depends('asset_type', 'vehicle_id', 'vehicle_id.license_plate', 'vehicle_id.vin_sn', 'vehicle_id.model_id',
-                 'vehicle_id.engine_no', 'vehicle_id.engine_capacity', 'vehicle_id.year_manufacture',
-                 'vehicle_id.vehicle_condition', 'vehicle_id.color')
-    def _compute_details(self):
+    # --- 5. CONTRACT VISIBILITY ---
+    contract_ids = fields.One2many('finance.contract', 'asset_id', string="Contracts")
+    current_contract_id = fields.Many2one('finance.contract', compute='_compute_current_contract', store=True, string="Active Contract")
+
+    @api.depends('contract_ids.ac_status')
+    def _compute_current_contract(self):
         for rec in self:
-            if rec.asset_type == 'vehicle' and rec.vehicle_id:
-                rec.registration_no = rec.vehicle_id.license_plate
-                rec.chassis_no = rec.vehicle_id.vin_sn
-                rec.make = rec.vehicle_id.model_id.brand_id.name if rec.vehicle_id.model_id else False
-                rec.model = rec.vehicle_id.model_id.name if rec.vehicle_id.model_id else False
-                rec.serial_no = rec.vehicle_id.vin_sn
-                # Sync additional fields from fleet.vehicle
-                rec.engine_no = rec.vehicle_id.engine_no
-                rec.engine_capacity = rec.vehicle_id.engine_capacity
-                rec.year_manufacture = rec.vehicle_id.year_manufacture
-                rec.vehicle_condition = rec.vehicle_id.vehicle_condition
-                rec.vehicle_color = rec.vehicle_id.color
-            else:
-                # For non-vehicle assets, clear vehicle-specific fields
-                rec.registration_no = False
-                rec.chassis_no = False
-                rec.make = False
-                rec.model = False
-                rec.engine_no = False
-                rec.engine_capacity = False
-                rec.year_manufacture = False
-                rec.vehicle_condition = False
-                rec.vehicle_color = False
+            active = rec.contract_ids.filtered(lambda c: c.ac_status in ['active', 'repo'])
+            rec.current_contract_id = active[0] if active else False
 
     @api.depends('name', 'registration_no', 'serial_no')
     def _compute_display_name(self):
@@ -103,12 +106,36 @@ class FinanceAsset(models.Model):
             else:
                 rec.display_name = rec.name
 
-    @api.constrains('asset_type', 'vehicle_id')
-    def _check_vehicle_required(self):
-        """Ensure vehicle assets must have a linked fleet vehicle"""
-        for rec in self:
-            if rec.asset_type == 'vehicle' and not rec.vehicle_id:
-                raise ValidationError(
-                    "Vehicle Record is required for vehicle-type assets. "
-                    "Please create or link a fleet vehicle record."
-                )
+    @api.model_create_multi
+    def create(self, vals_list):
+        """
+        Override create to auto-create fleet.vehicle for vehicle assets.
+        This ensures the vehicle_id exists before related fields are written.
+        """
+        records = super(FinanceAsset, self).create(vals_list)
+        for record in records.filtered(lambda r: r.asset_type == 'vehicle'):
+            record._create_fleet_vehicle_if_needed()
+        return records
+
+    def write(self, vals):
+        """
+        Override write to ensure fleet.vehicle exists if asset_type is changed to vehicle.
+        """
+        res = super(FinanceAsset, self).write(vals)
+        if 'asset_type' in vals and vals['asset_type'] == 'vehicle':
+            for record in self:
+                record._create_fleet_vehicle_if_needed()
+        return res
+
+    def _create_fleet_vehicle_if_needed(self):
+        """
+        Creates a fleet.vehicle record and links it if one doesn't already exist.
+        This method is the key to the related fields working correctly.
+        """
+        self.ensure_one()
+        if not self.vehicle_id:
+            fleet_vehicle = self.env['fleet.vehicle'].create({
+                'name': self.name,
+                'finance_asset_id': self.id,
+            })
+            self.vehicle_id = fleet_vehicle
